@@ -60,6 +60,14 @@ let passed = 0; const t = async (name, fn) => { try { await fn(); passed++; cons
     assert(!html.includes('data:audio'), 'embedded audio left in page'); assert(!/BONKCHAD|YOUR COIN NAME/.test(html));
   });
 
+  await t('room: neon sign default, custom sign text, flicker loop runs', async () => {
+    assert(mainJs.includes("||'The Trader'"), 'default sign text missing');
+    const o = boot({ cfg: { demo: true, signText: 'Custom Sign Text' } });
+    o.run(1500);                                  // flicker timer fires several times in this span
+    assert(o.hasData);
+    const w = {}; new Function('window', configSrc)(w); assert.strictEqual(w.TRADER_CONFIG.signText, 'The Trader');
+  });
+
   console.log('live data');
   const live1 = () => res({ pairs: [
     pair({ chainId: 'ethereum', priceUsd: '9', liquidity: { usd: 9e9 } }),                         // wrong chain decoy

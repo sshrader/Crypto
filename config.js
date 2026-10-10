@@ -10,7 +10,7 @@ window.TRADER_CONFIG = {
      Change this to your real coin, or to ANY other Solana coin to test.
      Test idea: BONK  DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263
      (check the address on dexscreener.com before relying on it)        */
-  ca: 'GnLb3Rvt81YAQazRw1A7vu9LTwedLEFXBhhXMTxupump',
+  ca: 'CAmp5hUNFvU5UH8BEFzVAsEAfoLi2HxGeoEJriZc7BZ6',
 
   /* Optional branding. Leave '' to auto-fill name, ticker and X link
      from DexScreener's listing. */
@@ -35,9 +35,9 @@ window.TRADER_CONFIG = {
      sensitivity    how strongly price moves drive his typing speed and
                     rage / celebration. 1 = default, 2 = twitchier,
                     0.5 = calmer.                                        */
-  pollSeconds: 1,
-  candleSeconds: 4,
-  sensitivity: 0.5,
+  pollSeconds: 4,
+  candleSeconds: 10,
+  sensitivity: 1,
 
   /* ---------- 3. AIRDROP WATCHER (optional) ---------------------------
      Paste the dev wallet address. When it sends your coin out, the
@@ -74,6 +74,12 @@ window.TRADER_CONFIG = {
   allowUrlOverrides: false,
   demo: false,
   fakeFeeds: false,
+
+  /* ---------- 4b. ROOM --------------------------------------------------
+     signText  the words on the neon sign on the back wall. The first word
+               glows cyan and the rest pink. Keep it short (about 14
+               characters or fewer) so it fits.                            */
+  signText: 'The Trader',
 
   /* ---------- 5. SOUNDS ------------------------------------------------
      niceSound  the "nice" clip (path or URL). Visitors must click the
