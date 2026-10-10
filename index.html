@@ -580,6 +580,7 @@ function despairStep(dt,sc){const w=DS;w.st+=dt;w.tot+=dt;
  else if(T==='cry'){poseCry(w);if(w.leave&&w.st>2)nx=true}
  else if(T==='rise'){poseLie(1-ezn(w.st/1.6));if(w.st>=1.6)nx=true}
  else if(T==='unsit'){poseSit(1-ezn(w.st/1.1));if(w.st>=1.1){nx=true;w.x=4;w.z=1.55;w.yaw=Math.PI;w.gp=0}}
+ w.wide=(T==='pace'||T==='cry');   // elbows out only when hands are at his face; hanging arms stay straight down
  for(let i=0;i<2;i++)handT[i].set(HP[i].x,HP[i].y,HP[i].z);
  if(nx){w.i++;w.st=0;w.wp=0;if(w.plan[w.i]&&w.plan[w.i][0]==='pace'){w.sub=1;w.pause=0}if(w.i>=w.plan.length)return false}
  return true}
@@ -709,7 +710,7 @@ function frame(now){
  else{lg.visible=true;tearAcc=0;wLegs.forEach(l=>{l.th.visible=l.sn.visible=l.kn.visible=l.ft.visible=false})}
  tears.forEach(t=>{if(t.life>0){t.life-=dt;t.vy-=4*dt;t.m.position.x+=t.vx*dt;t.m.position.y+=t.vy*dt;t.m.position.z+=t.vz*dt;if(t.life<=0)t.m.visible=false}});
  [0,1].forEach(i=>{const s=up.localToWorld(sh[i].clone()),h=hands[i].position,sd=i?1:-1;
-  const eo=mode===4?new V(sd*.32,.02,.05):(mode===2||(mode===3&&act&&act.name!=='lockin'&&act.name!=='chug'&&!(act.name==='distribute'&&act.t<1.7)))?new V(sd*.3,.1,.1):mode===1?new V(sd*.3,-.1,.2):new V(sd*.2,-.25,.3);
+  const eo=mode===4?(DS&&DS.wide?new V(sd*.32,.02,.05):new V(sd*.04,-.02,.04)):(mode===2||(mode===3&&act&&act.name!=='lockin'&&act.name!=='chug'&&!(act.name==='distribute'&&act.t<1.7)))?new V(sd*.3,.1,.1):mode===1?new V(sd*.3,-.1,.2):new V(sd*.2,-.25,.3);
   const el_=s.clone().add(h).multiplyScalar(.5).add(eo);
   seg(segs[i*2],s,el_);seg(segs[i*2+1],el_,h)});
  camF+=((mode===4&&DS?1:0)-camF)*Math.min(1,dt*1.5);
