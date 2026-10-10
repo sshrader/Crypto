@@ -19,17 +19,6 @@ window.TRADER_CONFIG = {
   twitter: '',         // e.g. '@bonkchad'
   twitterUrl: '',      // e.g. 'https://x.com/bonkchad'  (must start with https://)
 
-  /* Latest post from X shown under "Trader mood" (X's own embedded timeline).
-     tweetUser  the account to show, e.g. '@bonkchad'. Leave '' to use the
-                coin's X account (twitter / twitterUrl above, or the one
-                DexScreener lists).
-     showTweet  false = hide the box and never load anything from X.
-     Note: this loads a script from platform.twitter.com, and X sometimes
-     shows an older or empty timeline to logged-out visitors. If it can't
-     load, a plain "Open @user on X" link is shown instead.                */
-  tweetUser: '',
-  showTweet: true,
-
   /* LOGO: your own file. Save it as assets/logo.png (square works best -
      it is shown in a circle and also used as the browser-tab icon).
      To use a different file name or type, change the path here, e.g.

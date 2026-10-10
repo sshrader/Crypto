@@ -22,7 +22,6 @@ button{pointer-events:auto;border:0;border-radius:10px;padding:12px 18px;font-si
 #cname{font-weight:700;font-size:16px}
 #ctw{color:#8bb4ff;text-decoration:none}
 #ca{font-family:ui-monospace,monospace;font-size:11px;background:rgba(255,255,255,.08);padding:6px 8px;border-radius:8px;word-break:break-all;max-width:250px;user-select:all;-webkit-user-select:all;cursor:copy;margin-top:3px;touch-action:manipulation}
-#tweetCard{max-width:310px;margin-top:8px}#tweetBox{margin-top:6px;min-height:20px}#tweetBox a.twitter-timeline{color:#8bb4ff;font-size:13px;text-decoration:none}
 #toast{position:fixed;left:50%;top:26%;transform:translateX(-50%);font-size:34px;font-weight:900;text-align:center;pointer-events:none;opacity:0;text-shadow:0 3px 14px #000,0 0 22px #ff5fa2;white-space:nowrap}
 #toast.show{animation:pop 3s forwards}
 @keyframes pop{0%{opacity:0;transform:translate(-50%,14px) scale(.6)}10%{opacity:1;transform:translate(-50%,0) scale(1.12)}20%{transform:translate(-50%,0) scale(1)}80%{opacity:1}100%{opacity:0}}
@@ -41,7 +40,6 @@ button{pointer-events:auto;border:0;border-radius:10px;padding:12px 18px;font-si
   <div class="small" style="margin-top:8px"><span id="mclabel">MARKET CAP</span> <span id="src"></span> <a id="dxl" target="_blank" rel="noopener" style="display:none;color:#8bb4ff;text-decoration:none">DexScreener ↗</a></div><div class="price" id="price">$0</div><div id="chg">0%</div>
  </div>
  <div class="card"><div class="small">Trader mood</div><div class="price" id="mood" style="font-size:16px">…</div></div>
- <div class="card" id="tweetCard" style="display:none"><div class="small">Latest post on X</div><div id="tweetBox"></div></div>
 </div>
 <div id="toast"></div>
 <div id="air"><span id="airT"></span> <a id="airL" target="_blank" rel="noopener">view tx ↗</a></div>
@@ -311,18 +309,6 @@ function fmtMC(v){if(!hasData())return'—';if(!mcOK)return'$'+fmt(price);return
 function toast(t){const el=$('toast');el.textContent=t;el.classList.remove('show');void el.offsetWidth;el.classList.add('show')}
 const DUR={distribute:5.2,chug:4.8,scream:2.8,dance:6,letsgo:3.2,lockin:6,party:6};
 let uiKey='';
-// ===== latest post from X (official embedded timeline, shows the newest post) =====
-const TW_ON=cfg.showTweet!==false;let twShown='',twLoading=false;
-function twHandle(){if(!TW_ON)return'';const src=String(cfg.tweetUser||COIN.twitterUrl||COIN.twitter||'').trim();
- const m=src.match(/(?:twitter|x)\.com\/@?([A-Za-z0-9_]{1,15})(?:[\/?#]|$)/i)||src.match(/^@?([A-Za-z0-9_]{1,15})$/);return m?m[1]:''}
-function mountTweet(){try{mountTweet_()}catch(e){console.warn('latest-post box:',e)}}
-function mountTweet_(){const u=twHandle(),card=$('tweetCard');if(!u){if(card)card.style.display='none';twShown='';return}
- if(u===twShown)return;twShown=u;card.style.display='';const box=$('tweetBox');box.textContent='';
- const a=document.createElement('a');a.className='twitter-timeline';a.href='https://twitter.com/'+u;a.target='_blank';a.rel='noopener';a.textContent='Open @'+u+' on X ↗';
- ['theme:dark','chrome:noheader nofooter noborders transparent','tweet-limit:1','width:280','height:240','dnt:true'].forEach(s=>{const i=s.indexOf(':');a.setAttribute('data-'+s.slice(0,i),s.slice(i+1))});
- box.appendChild(a);
- const run=()=>{try{window.twttr&&window.twttr.widgets&&window.twttr.widgets.load(box)}catch(e){}};
- if(window.twttr&&window.twttr.widgets)run();else if(!twLoading){twLoading=true;const s=document.createElement('script');s.src='https://platform.twitter.com/widgets.js';s.async=true;s.onload=run;s.onerror=()=>{twLoading=false};document.head.appendChild(s)}}
 function setCoinUI(){uiKey=[COIN.name,COIN.symbol,COIN.logo,COIN.twitterUrl].join('|');
  $('cname').textContent=COIN.name||(DEMO?'Demo Coin':'Loading…');$('csym').textContent=COIN.symbol||'';
  $('ca').textContent=COIN.ca||'Set your contract address in config.js';
@@ -331,7 +317,7 @@ function setCoinUI(){uiKey=[COIN.name,COIN.symbol,COIN.logo,COIN.twitterUrl].joi
  document.title=(COIN.name||'Meme Day Trader')+' · Live Trader';
  const lg=$('logo'),ini=(COIN.symbol||COIN.name||'?').replace('$','')[0]||'?';lg.textContent='';
  if(COIN.logo){const im=document.createElement('img');im.src=COIN.logo;im.alt='';im.onload=()=>{const f=document.getElementById('fav');if(f)f.href=COIN.logo};im.onerror=()=>{console.warn('logo file not found: '+COIN.logo);im.remove();lg.textContent=ini};lg.appendChild(im)}else lg.textContent=ini;
- mountTweet();drawScreen3()}
+ drawScreen3()}
 $('ca').ondblclick=async()=>{if(!COIN.ca)return;let ok=false;try{await navigator.clipboard.writeText(COIN.ca);ok=true}catch(e){try{const rg=document.createRange();rg.selectNodeContents($('ca'));const se=getSelection();se.removeAllRanges();se.addRange(rg);ok=document.execCommand('copy')}catch(e2){}}toast(ok?'📋 CA copied!':'Press Ctrl/Cmd + C to copy')};
 const sh6=w=>w.slice(0,4)+'…'+w.slice(-4),fa=v=>v>=1e6?(v/1e6).toFixed(2)+'M':v>=1e3?(v/1e3).toFixed(1)+'K':Math.round(v).toString();
 function showAirdrop(ad){const n=ad.to.length,f=ad.to[0],who=sh6(f.w)+(n>1?' +'+(n-1)+' more':'');
