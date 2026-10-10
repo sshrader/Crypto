@@ -37,7 +37,7 @@ window.TRADER_CONFIG = {
                     0.5 = calmer.                                        */
   pollSeconds: 1,
   candleSeconds: 4,
-  sensitivity: 1,
+  sensitivity: 0.5,
 
   /* ---------- 3. AIRDROP WATCHER (optional) ---------------------------
      Paste the dev wallet address. When it sends your coin out, the
