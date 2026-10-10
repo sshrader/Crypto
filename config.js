@@ -27,7 +27,7 @@ window.TRADER_CONFIG = {
      Note: this loads a script from platform.twitter.com, and X sometimes
      shows an older or empty timeline to logged-out visitors. If it can't
      load, a plain "Open @user on X" link is shown instead.                */
-  tweetUser: '@synxer',
+  tweetUser: '',
   showTweet: true,
 
   /* LOGO: your own file. Save it as assets/logo.png (square works best -
