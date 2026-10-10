@@ -312,14 +312,9 @@ function toast(t){const el=$('toast');el.textContent=t;el.classList.remove('show
 const DUR={distribute:5.2,chug:4.8,scream:2.8,dance:6,letsgo:3.2,lockin:6,party:6};
 let uiKey='';
 // ===== latest post from X (official embedded timeline, shows the newest post) =====
-const TW_ON=cfg.showTweet!==false,TW_EVERY=cfg.tweetRefreshSeconds===0?0:Math.max(15,+cfg.tweetRefreshSeconds||30);let twShown='',twLoading=false,twTimer=0;
+const TW_ON=cfg.showTweet!==false;let twShown='',twLoading=false;
 function twHandle(){if(!TW_ON)return'';const src=String(cfg.tweetUser||COIN.twitterUrl||COIN.twitter||'').trim();
  const m=src.match(/(?:twitter|x)\.com\/@?([A-Za-z0-9_]{1,15})(?:[\/?#]|$)/i)||src.match(/^@?([A-Za-z0-9_]{1,15})$/);return m?m[1]:''}
-// re-checks the account every TW_EVERY seconds: builds a fresh embed off-screen inside the box, then swaps it in (no flicker)
-function refreshTweet(){try{const u=twShown,tw=window.twttr;if(!u||document.hidden||!(tw&&tw.widgets&&tw.widgets.createTimeline))return;
- const box=$('tweetBox'),tmp=document.createElement('div');box.style.position='relative';tmp.style.cssText='position:absolute;left:0;top:0;visibility:hidden';box.appendChild(tmp);
- tw.widgets.createTimeline({sourceType:'profile',screenName:u},tmp,{theme:'dark',chrome:'noheader nofooter noborders transparent',tweetLimit:1,width:280,height:240,dnt:true})
-  .then(el=>{if(!el||u!==twShown){tmp.remove();return}[...box.children].forEach(c=>{if(c!==tmp)c.remove()});tmp.style.cssText=''}).catch(()=>tmp.remove())}catch(e){}}
 function mountTweet(){try{mountTweet_()}catch(e){console.warn('latest-post box:',e)}}
 function mountTweet_(){const u=twHandle(),card=$('tweetCard');if(!u){if(card)card.style.display='none';twShown='';return}
  if(u===twShown)return;twShown=u;card.style.display='';const box=$('tweetBox');box.textContent='';
@@ -327,7 +322,6 @@ function mountTweet_(){const u=twHandle(),card=$('tweetCard');if(!u){if(card)car
  ['theme:dark','chrome:noheader nofooter noborders transparent','tweet-limit:1','width:280','height:240','dnt:true'].forEach(s=>{const i=s.indexOf(':');a.setAttribute('data-'+s.slice(0,i),s.slice(i+1))});
  box.appendChild(a);
  const run=()=>{try{window.twttr&&window.twttr.widgets&&window.twttr.widgets.load(box)}catch(e){}};
- if(!twTimer&&TW_EVERY>0)twTimer=setInterval(refreshTweet,TW_EVERY*1000);
  if(window.twttr&&window.twttr.widgets)run();else if(!twLoading){twLoading=true;const s=document.createElement('script');s.src='https://platform.twitter.com/widgets.js';s.async=true;s.onload=run;s.onerror=()=>{twLoading=false};document.head.appendChild(s)}}
 function setCoinUI(){uiKey=[COIN.name,COIN.symbol,COIN.logo,COIN.twitterUrl].join('|');
  $('cname').textContent=COIN.name||(DEMO?'Demo Coin':'Loading…');$('csym').textContent=COIN.symbol||'';
