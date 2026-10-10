@@ -35,9 +35,9 @@ window.TRADER_CONFIG = {
      sensitivity    how strongly price moves drive his typing speed and
                     rage / celebration. 1 = default, 2 = twitchier,
                     0.5 = calmer.                                        */
-  pollSeconds: 4,
-  candleSeconds: 10,
-  sensitivity: 1,
+  pollSeconds: 2,
+  candleSeconds: 3,
+  sensitivity: .5,
 
   /* ---------- 3. AIRDROP WATCHER (optional) ---------------------------
      Paste the dev wallet address. When it sends your coin out, the
@@ -91,7 +91,7 @@ window.TRADER_CONFIG = {
      despairMaxSeconds     longest he stays away from the desk (min 12, default 40) */
   despair: true,
   despairAfterSeconds: 5,
-  despairMaxSeconds: 40,
+  despairMaxSeconds: 10,
 
   /* ---------- 5. SOUNDS ------------------------------------------------
      niceSound  the "nice" clip (path or URL). Visitors must click the
