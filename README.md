@@ -85,6 +85,18 @@ Any of these is free and gives HTTPS (needed for the double-click-to-copy contra
 
 Custom domain: add it in the host's Domains settings and create the DNS records it shows.
 
+**Setting the coin from the host (`CA_KEY`)**
+
+A static page can't read host environment variables at runtime, so the address is written into `config.js` during the build.
+- **GitHub Pages (this repo):** Settings → Secrets and variables → Actions → **Variables** → New repository variable named `CA_KEY` with the mint address
+  (a Variable, not a Secret: the address ends up in a public file either way). Then Settings → Pages → Source → **GitHub Actions**.
+  `.github/workflows/pages.yml` runs the tests, builds with `node scripts/build.js`, and deploys on every push to `main`.
+  To switch coins, change the variable and re-run the workflow (Actions tab → Deploy to GitHub Pages → Run workflow).
+- **Netlify / Vercel / Cloudflare Pages:** add an environment variable `CA_KEY` in the host's settings, set the build command to
+  `node scripts/build.js dist` and the publish/output directory to `dist`.
+- If `CA_KEY` is empty or unset, the `ca:` in `config.js` is used. An invalid value fails the build instead of publishing a broken site.
+- Local test: `CA_KEY=<address> node scripts/build.js` writes the site to `dist/`.
+
 **Before you share the link publicly**
 1. `allowUrlOverrides: false` (the default). If it's `true`, anyone can craft `yoursite.com/?ca=SOMETHING_ELSE` and your page will
    display — and offer to copy — *that* address. That is a phishing risk on a real domain.
