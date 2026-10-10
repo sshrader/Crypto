@@ -28,7 +28,7 @@ function boot({ cfg = {}, loc = { protocol: 'https:', hostname: 'example.com', s
     addEventListener() {}, setInterval: () => 0, setTimeout: () => 0, console: { log() {}, warn() {}, error() {} } };
   let js = mainJs; if (patch) js = patch(js);
   const names = Object.keys(g);
-  const exp = `;return {startDespair,get DS(){return DS},get PP(){return PP},get FT(){return FT},frame,poll,pollDev,parseAirdrop,hud,fmtMC,mc,queue,MILES,
+  const exp = `;return {twHandle,startDespair,get DS(){return DS},get PP(){return PP},get FT(){return FT},frame,poll,pollDev,parseAirdrop,hud,fmtMC,mc,queue,MILES,
     get live(){return live},get price(){return price},get statusMsg(){return statusMsg},get mode(){return mode},get stats(){return stats},
     get COIN(){return COIN},get DEMO(){return DEMO},get FAKE(){return FAKE},get CA(){return CA},get mcOK(){return mcOK},get mcScale(){return mcScale},
     get act(){return act},get hasData(){return hasData()},get target(){return target}}`;
@@ -223,6 +223,19 @@ let passed = 0; const t = async (name, fn) => { try { await fn(); passed++; cons
     const lc = run({ CA_key: MINT }, 'lc'); assert.strictEqual(lc.status, 0, lc.stderr); assert(fs.readFileSync(path.join(tmp, 'lc', 'config.js'), 'utf8').includes("ca: '" + MINT + "'"), 'CA_key (different capitalisation) not picked up');
     assert.notStrictEqual(run({ CA_KEY: 'not a real address!' }, 'c').status, 0, 'invalid CA_KEY must fail the build');
     fs.rmSync(tmp, { recursive: true, force: true });
+  });
+
+
+  console.log('latest post box');
+  await t('twHandle: configured user, X/Twitter URL, DexScreener handle, off switch, junk rejected', async () => {
+    const h = (cfg, coin) => { const o = boot({ cfg }); if (coin) Object.assign(o.COIN, coin); return o.twHandle(); };
+    assert.strictEqual(h({ tweetUser: '@Some_User1' }), 'Some_User1');
+    assert.strictEqual(h({ tweetUser: 'https://x.com/abc?s=20' }), 'abc');
+    assert.strictEqual(h({ tweetUser: '' }, { twitterUrl: 'https://twitter.com/coinacct' }), 'coinacct');
+    assert.strictEqual(h({ tweetUser: '' }, { twitterUrl: '', twitter: '@fromdex' }), 'fromdex');
+    assert.strictEqual(h({ tweetUser: 'a b<script>' }), '');
+    assert.strictEqual(h({ tweetUser: 'https://x.com/home' , showTweet: false }), '');
+    assert.strictEqual(h({ tweetUser: '' }), '', 'no account known -> hidden');
   });
 
   console.log('airdrop parser');
