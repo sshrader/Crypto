@@ -18,14 +18,17 @@ fs.rmSync(out, { recursive: true, force: true });
   }
 })(root, out);
 
-const ca = (process.env.CA_KEY || '').trim();
+// Env var names are case-sensitive on Linux build machines, so accept CA_KEY in any capitalisation (CA_key, ca_key ...).
+const envName = Object.keys(process.env).find(k => k.toUpperCase() === 'CA_KEY' && String(process.env[k]).trim());
+const ca = envName ? String(process.env[envName]).trim() : '';
+if (!ca) console.log('CA_KEY: not found in the build environment (variables whose name contains "CA": ' + (Object.keys(process.env).filter(k => /(^|_)CA(_|$)/i.test(k)).join(', ') || 'none') + ')');
 if (ca) {
   if (!B58.test(ca)) { console.error('CA_KEY is not a valid Solana address (32-44 base58 characters): ' + JSON.stringify(ca)); process.exit(1); }
   const file = path.join(out, 'config.js'), src = fs.readFileSync(file, 'utf8');
   const re = /(\bca\s*:\s*)(['"])[^'"]*\2/;
   if (!re.test(src)) { console.error("Could not find the  ca: '...'  line in config.js"); process.exit(1); }
   fs.writeFileSync(file, src.replace(re, (_, k) => k + "'" + ca + "'"));
-  console.log('Built ' + out + ' with CA from CA_KEY: ' + ca);
+  console.log('Built ' + out + ' with CA from ' + envName + ': ' + ca);
 } else {
   console.log('Built ' + out + ' (CA_KEY not set, using ca from config.js)');
 }
