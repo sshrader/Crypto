@@ -27,8 +27,8 @@ window.TRADER_CONFIG = {
      sensitivity    how strongly price moves drive his typing speed and
                     rage / celebration. 1 = default, 2 = twitchier,
                     0.5 = calmer.                                        */
-  pollSeconds: 4,
-  candleSeconds: 10,
+  pollSeconds: 2,
+  candleSeconds:1 ,
   sensitivity: 1,
 
   /* ---------- 3. AIRDROP WATCHER (optional) ---------------------------
