@@ -220,6 +220,7 @@ let passed = 0; const t = async (name, fn) => { try { await fn(); passed++; cons
     ['index.html', 'config.js', '.nojekyll'].forEach(f => assert(fs.existsSync(path.join(tmp, 'a', f)), 'missing ' + f));
     ['tests', 'scripts', '.github', 'README.md'].forEach(f => assert(!fs.existsSync(path.join(tmp, 'a', f)), 'should not publish ' + f));
     const b = run({}, 'b'); assert.strictEqual(b.status, 0); assert.strictEqual(fs.readFileSync(path.join(tmp, 'b', 'config.js'), 'utf8'), configSrc, 'unset CA_KEY must leave config.js unchanged');
+    const lc = run({ CA_key: MINT }, 'lc'); assert.strictEqual(lc.status, 0, lc.stderr); assert(fs.readFileSync(path.join(tmp, 'lc', 'config.js'), 'utf8').includes("ca: '" + MINT + "'"), 'CA_key (different capitalisation) not picked up');
     assert.notStrictEqual(run({ CA_KEY: 'not a real address!' }, 'c').status, 0, 'invalid CA_KEY must fail the build');
     fs.rmSync(tmp, { recursive: true, force: true });
   });
