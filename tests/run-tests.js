@@ -1,0 +1,170 @@
+// Run:  node tests/run-tests.js
+// Loads index.html + config.js into Node with a stubbed THREE/DOM and a fake fetch,
+// then checks the live-data path, error states, URL-override rules, demo mode and
+// the airdrop transaction parser. It cannot check how things LOOK or reach the real
+// DexScreener / Solana RPC - open the page in a browser for that.
+const fs = require('fs'), path = require('path'), assert = require('assert');
+const root = path.join(__dirname, '..');
+const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+const configSrc = fs.readFileSync(path.join(root, 'config.js'), 'utf8');
+const mainJs = html.split('<script>').pop().split('</script>')[0];
+
+const MINT = 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263';
+const DEV = '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU';
+
+function mk() { const f = function () {}; return new Proxy(f, { get: (t, k) => k === Symbol.toPrimitive ? () => Math.random() - .5 : k === 'then' ? undefined : mk(), apply: () => mk(), construct: () => mk(), set: () => true }); }
+const res = (body, ok = true) => ({ ok, status: ok ? 200 : 500, json: async () => body });
+
+function boot({ cfg = {}, loc = { protocol: 'https:', hostname: 'example.com', search: '' }, hidden = false, fetchImpl, patch } = {}) {
+  const win = {}; new Function('window', configSrc)(win);
+  Object.assign(win.TRADER_CONFIG, { ca: MINT }, cfg);
+  const fetched = [];
+  const doc = { createElement: () => mk(), getElementById: () => mk(), body: { insertAdjacentHTML() {} }, hidden, title: '' };
+  const g = { THREE: new Proxy({}, { get: () => mk() }), window: win, document: doc, location: loc,
+    fetch: async (u, o) => { fetched.push(String(u)); if (!fetchImpl) throw new Error('offline'); return fetchImpl(String(u), o); },
+    navigator: { clipboard: { writeText: async () => {} } }, getSelection: () => mk(),
+    Audio: class { play() { return Promise.resolve(); } }, SpeechSynthesisUtterance: class {}, speechSynthesis: { cancel() {}, speak() {} },
+    requestAnimationFrame: () => 0, performance: { now: () => 0 }, innerWidth: 800, innerHeight: 600, devicePixelRatio: 1,
+    addEventListener() {}, setInterval: () => 0, setTimeout: () => 0, console: { log() {}, warn() {}, error() {} } };
+  let js = mainJs; if (patch) js = patch(js);
+  const names = Object.keys(g);
+  const exp = `;return {frame,poll,pollDev,parseAirdrop,hud,fmtMC,mc,queue,MILES,
+    get live(){return live},get price(){return price},get statusMsg(){return statusMsg},get mode(){return mode},get stats(){return stats},
+    get COIN(){return COIN},get DEMO(){return DEMO},get FAKE(){return FAKE},get CA(){return CA},get mcOK(){return mcOK},get mcScale(){return mcScale},
+    get act(){return act},get hasData(){return hasData()},get target(){return target}}`;
+  const o = new Function(...names, js + exp)(...names.map(n => g[n]));
+  let now = 0;
+  o.run = (n, each) => { for (let i = 0; i < n; i++) { now += 33; o.frame(now); if (each) each(i); } };
+  o.fetched = fetched; o.doc = doc;
+  return o;
+}
+
+const pair = (o = {}) => Object.assign({ chainId: 'solana', dexId: 'raydium', url: 'https://dexscreener.com/solana/PAIR1',
+  baseToken: { address: MINT, name: 'Test Coin', symbol: 'TST' }, priceUsd: '0.00001200', marketCap: 12000, fdv: 12000,
+  liquidity: { usd: 9000 }, priceChange: { m5: 1.5, h1: 4, h6: 9, h24: 12.34 }, volume: { h24: 50000, h1: 4000 }, txns: { m5: { buys: 5, sells: 3 }, h24: { buys: 400, sells: 380 } },
+  info: { imageUrl: 'https://cdn.example/logo.png', socials: [{ type: 'twitter', url: 'https://x.com/testcoin' }] } }, o);
+
+let passed = 0; const t = async (name, fn) => { try { await fn(); passed++; console.log('  ok  ' + name); } catch (e) { console.log('FAIL  ' + name + '\n      ' + (e.stack || e).split('\n').slice(0, 4).join('\n      ')); process.exitCode = 1; } };
+
+(async () => {
+  console.log('static / config');
+  await t('config.js is valid and the default CA looks like a Solana address', () => {
+    const w = {}; new Function('window', configSrc)(w); const c = w.TRADER_CONFIG;
+    assert(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(c.ca), 'default ca invalid');
+    assert.strictEqual(c.demo, false); assert.strictEqual(c.fakeFeeds, false); assert.strictEqual(c.allowUrlOverrides, false);
+    const caps = c.milestones.map(m => m.mc); assert.deepStrictEqual(caps, [...caps].sort((a, b) => a - b), 'milestones not ascending');
+    const ok = new Set(['chug', 'scream', 'dance', 'letsgo', 'lockin', 'party']); c.milestones.forEach(m => assert(ok.has(m.act), 'bad act ' + m.act));
+  });
+  await t('index.html references files that exist; nothing embedded or leftover', () => {
+    assert(html.includes('src="config.js"')); assert(fs.existsSync(path.join(root, 'assets/nice.mp3')));
+    assert(!html.includes('data:audio'), 'embedded audio left in page'); assert(!/BONKCHAD|YOUR COIN NAME/.test(html));
+  });
+
+  console.log('live data');
+  const live1 = () => res({ pairs: [
+    pair({ chainId: 'ethereum', priceUsd: '9', liquidity: { usd: 9e9 } }),                         // wrong chain decoy
+    pair({ baseToken: { address: 'Other1111111111111111111111111111111111111', name: 'X', symbol: 'X' }, priceUsd: '5', liquidity: { usd: 9e9 } }), // wrong base token decoy
+    pair({ priceUsd: '0.0000050', liquidity: { usd: 100 }, marketCap: 5000 }),                      // valid but thin
+    pair() ] });                                                                                     // valid, deepest liquidity
+  await t('picks the deepest valid Solana pair, fills name/logo/X, uses real market cap', async () => {
+    const o = boot({ fetchImpl: () => live1() });
+    assert(!o.hasData && o.fmtMC(o.mc()) === '—', 'should show — before data');
+    await o.poll();
+    assert(o.live && o.hasData && o.statusMsg === '');
+    assert.strictEqual(o.target, 0.000012); assert.strictEqual(o.price, 0.000012);
+    assert.strictEqual(Math.round(o.mc()), 12000); assert.strictEqual(o.fmtMC(o.mc()), '$12.0K');
+    assert.strictEqual(o.COIN.name, 'Test Coin'); assert.strictEqual(o.COIN.symbol, '$TST'); assert.strictEqual(o.COIN.twitter, '@testcoin');
+    assert(o.COIN.logo.startsWith('https://'));
+    assert.deepStrictEqual(o.MILES.map(m => m.done), [true, true, false, false, false, false, false], 'already-passed milestones must not replay');
+    assert.strictEqual(o.queue.length, 0); o.run(300);
+  });
+  await t('no random price movement without data or demo; real moves drive milestones', async () => {
+    const seen = new Set(); const o = boot({ fetchImpl: () => live1() });
+    o.run(120); assert.strictEqual(o.price, 0.042, 'price must not move before data');
+    await o.poll();
+    const p0 = o.price; o.run(60); assert(Math.abs(o.price - p0) < 1e-12, 'live price drifted with no new data');
+    const bigger = () => res({ pairs: [pair({ priceUsd: '0.0000250', marketCap: 25000, priceChange: { m5: 40, h1: 40, h6: 40, h24: 55 } })] });
+    o.__f = bigger; // new payload for the next poll
+    const o2 = boot({ fetchImpl: (() => { let n = 0; return () => (n++ === 0 ? live1() : bigger()); })() });
+    await o2.poll(); await o2.poll();
+    o2.run(2500, () => { if (o2.act) seen.add(o2.act.name); });
+    assert(seen.has('dance') && seen.has('letsgo'), 'expected 15K + 20K milestone acts, saw ' + [...seen]);
+    assert.strictEqual(o2.fmtMC(o2.mc()), '$25.0K');
+  });
+  await t('endpoint fallback: first URL fails, second works', async () => {
+    const o = boot({ fetchImpl: u => u.includes('token-pairs') ? res({}, false) : res({ pairs: [pair()] }) });
+    for (let i = 0; i < 20; i++) await new Promise(r => setImmediate(r));   // let the page's own startup poll finish
+    assert(o.live, 'should be live after fallback');
+    assert(o.fetched[0].includes('token-pairs') && o.fetched[1].includes('latest/dex/tokens'), 'wrong order: ' + o.fetched.join(' | '));
+    o.fetched.length = 0; await o.poll();
+    assert.strictEqual(o.fetched.length, 1); assert(o.fetched[0].includes('latest/dex/tokens'), 'should remember the working endpoint');
+  });
+  await t('accepts the array response format', async () => {
+    const o = boot({ fetchImpl: () => res([pair()]) }); await o.poll(); assert(o.live && Math.round(o.mc()) === 12000);
+  });
+  await t('no marketCap/fdv: shows USD price, never fires milestones', async () => {
+    const o = boot({ fetchImpl: () => res({ pairs: [pair({ marketCap: undefined, fdv: undefined })] }) }); await o.poll();
+    assert(o.live && !o.mcOK); assert(o.fmtMC(o.mc()).startsWith('$0.0000'), o.fmtMC(o.mc())); o.run(200); assert.strictEqual(o.queue.length, 0);
+  });
+
+  console.log('error states');
+  await t('no trading pair', async () => {
+    const o = boot({ fetchImpl: () => res({ pairs: [] }) }); await o.poll();
+    assert(!o.live && /no trading pair/.test(o.statusMsg) && o.fmtMC(o.mc()) === '—'); o.run(120);
+  });
+  await t('network failure', async () => { const o = boot({}); await o.poll(); assert(!o.live && /feed error/.test(o.statusMsg)); o.run(60); });
+  await t('invalid CA: no request is made', async () => {
+    const o = boot({ cfg: { ca: 'abc' }, fetchImpl: () => res({ pairs: [pair()] }) }); await o.poll();
+    assert.strictEqual(o.fetched.length, 0); assert(/invalid contract address/.test(o.statusMsg)); o.run(60);
+  });
+  await t('hidden tab: no request', async () => { const o = boot({ hidden: true, fetchImpl: () => res({ pairs: [pair()] }) }); await o.poll(); assert.strictEqual(o.fetched.length, 0); });
+  await t('live feed keeps last price when a later poll fails', async () => {
+    let bad = false; const o = boot({ fetchImpl: () => bad ? Promise.reject(new Error('x')) : live1() });
+    await o.poll(); bad = true; await o.poll(); await o.poll(); await o.poll(); assert(o.live && /reconnecting/.test(o.statusMsg)); assert.strictEqual(o.target, 0.000012);
+  });
+
+  console.log('URL override rules');
+  const OTHER = 'EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm';
+  await t('public site ignores ?ca= and ?demo=1', () => {
+    const o = boot({ loc: { protocol: 'https:', hostname: 'mysite.com', search: `?ca=${OTHER}&demo=1&fake=1` } });
+    assert.strictEqual(o.CA, MINT); assert(!o.DEMO && !o.FAKE);
+  });
+  await t('localhost and file:// honor overrides', () => {
+    assert.strictEqual(boot({ loc: { protocol: 'http:', hostname: 'localhost', search: `?ca=${OTHER}` } }).CA, OTHER);
+    const f = boot({ loc: { protocol: 'file:', hostname: '', search: '?demo=1' } }); assert(f.DEMO && f.FAKE);
+  });
+  await t('allowUrlOverrides:true enables them on a public host', () => {
+    assert.strictEqual(boot({ cfg: { allowUrlOverrides: true }, loc: { protocol: 'https:', hostname: 'mysite.com', search: `?ca=${OTHER}` } }).CA, OTHER);
+  });
+
+  console.log('demo mode');
+  await t('demo simulates price, runs every milestone + airdrop act and rage/party', async () => {
+    const o = boot({ cfg: { demo: true }, patch: js => {
+      const a = "if(mode===3){}else if(mode===0){if(sc<-.75)mode=1;else if(sc>.9)mode=2}\n else if(mode===1&&sc>-.35)mode=0;else if(mode===2&&sc<.45)mode=0;";
+      assert(js.includes(a), 'transition patch target missing');
+      return js.replace(a, "if(mode===3){}else if(mode===0&&Math.random()<.004)mode=1+(Math.random()<.5|0);else if(mode!==0&&Math.random()<.01)mode=0;").replace('drinkWait=8', 'drinkWait=1'); } });
+    assert(o.DEMO && o.FAKE && o.hasData); const p0 = o.price; o.run(200); assert(o.price !== p0, 'demo price should move');
+    o.MILES.forEach(m => o.queue.push(Object.assign({}, m)));
+    o.queue.push({ act: 'distribute', label: 'x', info: { sig: 'abc', total: 5000, to: [{ w: 'A'.repeat(44), a: 4990 }, { w: 'B'.repeat(44), a: 10 }] } });
+    const seen = new Set(), modes = new Set(); o.run(6000, () => { if (o.act) seen.add(o.act.name); modes.add(o.mode); });
+    ['chug', 'scream', 'dance', 'letsgo', 'lockin', 'party', 'distribute'].forEach(a => assert(seen.has(a), 'act never ran: ' + a));
+    assert(modes.has(1) && modes.has(2), 'rage/party never ran');
+  });
+
+  console.log('airdrop parser');
+  const o = boot({ cfg: { devWallet: DEV } });
+  const tb = (owner, amt, i) => ({ accountIndex: i, mint: MINT, owner, uiTokenAmount: { amount: String(amt), decimals: 6 } });
+  const tx = (pre, post, err = null) => ({ meta: { err, preTokenBalances: pre, postTokenBalances: post } });
+  await t('detects dev -> holders transfer, totals and ignores unchanged accounts', () => {
+    const a = o.parseAirdrop(tx([tb(DEV, 1000e6, 1), tb('R1', 0, 2), tb('R2', 5e6, 3), tb('POOL', 9e6, 4)], [tb(DEV, 400e6, 1), tb('R1', 300e6, 2), tb('R2', 305e6, 3), tb('POOL', 9e6, 4)]), 'sig1');
+    assert.strictEqual(a.total, 600); assert.deepStrictEqual(a.to.map(x => x.w).sort(), ['R1', 'R2']);
+  });
+  await t('ignores transfers not from the dev wallet, failed txs and other mints', () => {
+    assert.strictEqual(o.parseAirdrop(tx([tb('X', 5e6, 1)], [tb('X', 1e6, 1), tb('Y', 4e6, 2)]), 's'), null);
+    assert.strictEqual(o.parseAirdrop(tx([tb(DEV, 5e6, 1)], [tb(DEV, 1e6, 1), tb('Y', 4e6, 2)], { InstructionError: 1 }), 's'), null);
+    const other = b => Object.assign({}, b, { mint: 'OtherMint' });
+    assert.strictEqual(o.parseAirdrop(tx([other(tb(DEV, 5e6, 1))], [other(tb(DEV, 1e6, 1)), other(tb('Y', 4e6, 2))]), 's'), null);
+  });
+
+  console.log(`\n${passed} checks passed${process.exitCode ? ' — SOME FAILED' : ''}`);
+})();
