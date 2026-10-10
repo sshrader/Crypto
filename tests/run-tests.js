@@ -28,7 +28,7 @@ function boot({ cfg = {}, loc = { protocol: 'https:', hostname: 'example.com', s
     addEventListener() {}, setInterval: () => 0, setTimeout: () => 0, console: { log() {}, warn() {}, error() {} } };
   let js = mainJs; if (patch) js = patch(js);
   const names = Object.keys(g);
-  const exp = `;return {frame,poll,pollDev,parseAirdrop,hud,fmtMC,mc,queue,MILES,
+  const exp = `;return {startDespair,get DS(){return DS},get PP(){return PP},get FT(){return FT},frame,poll,pollDev,parseAirdrop,hud,fmtMC,mc,queue,MILES,
     get live(){return live},get price(){return price},get statusMsg(){return statusMsg},get mode(){return mode},get stats(){return stats},
     get COIN(){return COIN},get DEMO(){return DEMO},get FAKE(){return FAKE},get CA(){return CA},get mcOK(){return mcOK},get mcScale(){return mcScale},
     get act(){return act},get hasData(){return hasData()},get target(){return target}}`;
@@ -165,6 +165,48 @@ let passed = 0; const t = async (name, fn) => { try { await fn(); passed++; cons
     const seen = new Set(), modes = new Set(); o.run(6000, () => { if (o.act) seen.add(o.act.name); modes.add(o.mode); });
     ['chug', 'scream', 'dance', 'letsgo', 'lockin', 'party', 'distribute'].forEach(a => assert(seen.has(a), 'act never ran: ' + a));
     assert(modes.has(1) && modes.has(2), 'rage/party never ran');
+  });
+
+
+  console.log('meltdown (stand up, cry on the bed / pace, walk back)');
+  const meltRun = async (kind) => {
+    const o = boot({ cfg: { demo: true, despairMaxSeconds: 12 } });
+    o.run(10); assert.strictEqual(o.mode, 0);
+    o.startDespair(kind); assert.strictEqual(o.mode, 4);
+    const steps = [], fin = v => [v.x, v.y, v.z, v.rx, v.ry, v.rz].every(Number.isFinite);
+    let cryPose = null, frames = 0;
+    while (o.mode === 4 && frames < 6000) { o.run(1); frames++;
+      const s = o.DS && o.DS.plan[o.DS.i][0]; if (s && steps[steps.length - 1] !== s) steps.push(s);
+      assert(fin(o.PP), 'pose went NaN in step ' + s); assert(o.FT.every(f => [f.x, f.y, f.z].every(Number.isFinite)), 'foot NaN');
+      if (s === 'cry' && o.DS.st > 1) cryPose = Object.assign({}, o.PP); }
+    assert.strictEqual(o.mode, 0, 'never returned to his chair'); assert.strictEqual(o.DS, null);
+    assert(Math.abs(o.PP.x) < 1e-6 && Math.abs(o.PP.y - .55) < 1e-6 && Math.abs(o.PP.z - 1.2) < 1e-6, 'did not end seated at the desk');
+    return { steps, cryPose };
+  };
+  await t('bed meltdown: stands, walks to the bed, lies down crying, gets up, sits back down', async () => {
+    const r = await meltRun('bed');
+    assert.deepStrictEqual(r.steps, ['stand', 'walk', 'turn', 'sit', 'lie', 'cry', 'rise', 'unsit', 'walk', 'turn', 'seat']);
+    assert(Math.abs(r.cryPose.x - 4) < .01 && r.cryPose.y > .9 && r.cryPose.y < 1, 'not lying on the bed: ' + JSON.stringify(r.cryPose));
+    assert(Math.abs(r.cryPose.rx - Math.PI / 2) < .01, 'not on his back');
+  });
+  await t('pacing meltdown: stands, paces, walks back and sits', async () => {
+    const r = await meltRun('pace');
+    assert.deepStrictEqual(r.steps, ['stand', 'walk', 'pace', 'walk', 'turn', 'seat']);
+  });
+  await t('a sustained dump (rage for a few seconds) triggers the meltdown; cooldown stops an immediate repeat', async () => {
+    const o = boot({ cfg: { demo: true, despairMaxSeconds: 12, despairAfterSeconds: 3 }, patch: js => {
+      const a = 'sc=(rawRate()-5)/8,pm=mode;'; assert(js.includes(a), 'sc patch target missing'); return js.replace(a, 'sc=-2,pm=mode;'); } });
+    let first = -1, back = -1, again = -1, f = 0;
+    o.run(1); for (; f < 4000; f++) { o.run(1);
+      if (o.mode === 4 && first < 0) first = f;
+      if (first >= 0 && o.mode !== 4 && back < 0) back = f;
+      if (back >= 0 && o.mode === 4 && again < 0) again = f; }
+    assert(first > 0 && first * .033 >= 2.5, 'meltdown should start only after ~3s of rage, started at frame ' + first);
+    assert(back > first, 'never came back'); assert(again < 0 || (again - back) * .033 >= 24, 'cooldown not honoured');
+  });
+  await t('despair:false turns the meltdown off', async () => {
+    const o = boot({ cfg: { demo: true, despair: false, despairAfterSeconds: 1 }, patch: js => js.replace('sc=(rawRate()-5)/8,pm=mode;', 'sc=-2,pm=mode;') });
+    let m4 = false; o.run(900, () => { if (o.mode === 4) m4 = true; }); assert(!m4);
   });
 
   console.log('airdrop parser');
