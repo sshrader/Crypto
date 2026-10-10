@@ -44,7 +44,7 @@ button{pointer-events:auto;border:0;border-radius:10px;padding:12px 18px;font-si
 <div id="toast"></div>
 <div id="air"><span id="airT"></span> <a id="airL" target="_blank" rel="noopener">view tx ↗</a></div>
 <div class="hud bot">
- <button id="pump">🚀 PUMP</button><button id="dump">📉 DUMP</button><button id="sim" style="background:#ffd24a">🪂 Sim airdrop</button><button id="mile" style="background:#ff9f1c">🎯 Next milestone</button><button id="auto">Auto: ON</button><button id="snd" style="background:#ffd166">🔊 Sound: OFF</button>
+ <button id="pump">🚀 PUMP</button><button id="dump">📉 DUMP</button><button id="melt" style="background:#7aa2ff">😭 Meltdown</button><button id="sim" style="background:#ffd24a">🪂 Sim airdrop</button><button id="mile" style="background:#ff9f1c">🎯 Next milestone</button><button id="auto">Auto: ON</button><button id="snd" style="background:#ffd166">🔊 Sound: OFF</button>
 </div>
 <script src="vendor/three.min.js"></script>
 <script>window.THREE||document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>')</script>
@@ -266,6 +266,20 @@ const lg=new THREE.Group();lg.position.set(0,.55,1.2);S.add(lg);
  seg(th,new V(sx*.15,.08,0),new V(sx*.16,.08,-.52));seg(sn,new V(sx*.16,.08,-.52),new V(sx*.16,-.46,-.58));
  sph(.09,jeans,[sx*.16,.08,-.52],lg);box(.13,.07,.3,shoe,[sx*.16,-.52,-.7],lg)});
 function seg(m,a,b){m.position.copy(a).add(b).multiplyScalar(.5);m.scale.set(1,a.distanceTo(b),1);m.quaternion.setFromUnitVectors(new V(0,1,0),b.clone().sub(a).normalize())}
+// ===== MELTDOWN rig: walking legs (IK) + tears =====
+up.rotation.order='YXZ';
+const wLegs=[0,1].map(()=>{const th=new THREE.Mesh(new THREE.CylinderGeometry(.1,.085,1,12),jeans),sn=new THREE.Mesh(new THREE.CylinderGeometry(.075,.06,1,12),jeans);S.add(th,sn);
+ const kn=sph(.085,jeans,[0,0,0]),ft=box(.13,.07,.3,shoe,[0,0,0]);th.visible=sn.visible=kn.visible=ft.visible=false;return{th,sn,kn,ft}});
+const _d=new V(),_b=new V(),_k=new V(),_e=new V();
+function legIK(i,hip,ank,bend,yaw){const L=wLegs[i],L1=.52,L2=.54;
+ _d.copy(ank).sub(hip);const d=Math.max(.25,Math.min(L1+L2-.003,_d.length()));_d.normalize();
+ _b.copy(bend);_b.addScaledVector(_d,-_b.dot(_d));if(_b.lengthSq()<1e-6)_b.set(0,0,-1);_b.normalize();
+ const a=(L1*L1-L2*L2+d*d)/(2*d),h=Math.sqrt(Math.max(0,L1*L1-a*a));
+ _k.copy(hip).addScaledVector(_d,a).addScaledVector(_b,h);_e.copy(hip).addScaledVector(_d,d);
+ seg(L.th,hip,_k);seg(L.sn,_k,_e);L.kn.position.copy(_k);L.ft.position.set(ank.x,ank.y-.1,ank.z);L.ft.rotation.y=yaw;
+ L.th.visible=L.sn.visible=L.kn.visible=L.ft.visible=true}
+const tearM=new THREE.MeshBasicMaterial({color:0x8fd3ff}),tears=[];
+for(let i=0;i<16;i++){const m=new THREE.Mesh(new THREE.SphereGeometry(.014,8,6),tearM);m.visible=false;S.add(m);tears.push({m,life:0,vx:0,vy:0,vz:0})}
 // ===== CONFIG: everything comes from config.js (see README) =====
 if(!window.TRADER_CONFIG){document.body.insertAdjacentHTML('afterbegin','<p style="position:fixed;z-index:9;left:0;right:0;margin:0;padding:20px;background:#400;color:#fff;font:16px sans-serif">config.js not found next to index.html</p>');throw new Error('config.js missing')}
 const cfg=window.TRADER_CONFIG,qs=new URLSearchParams(location.search);
@@ -283,6 +297,7 @@ const SENS=cfg.sensitivity||1,CANDLE_TICKS=Math.max(2,Math.round((cfg.candleSeco
 const MILES=(cfg.milestones||[]).map(m=>Object.assign({done:false},m));
 const CA=COIN.ca;
 let mode=0,flash=0,shake=0,sym=COIN.symbol||'$COIN',live=false,target=0,m5=0,price=0.0420,hist=[],mom=0,drift=0,driftT=0,auto=true,bias=0,biasT=0,start=price;
+let DS=null,rageT=0,despCool=0,camF=0,tearAcc=0,meltK='pace'; // meltdown state
 let statusMsg=CA_OK?'connecting…':DEMO?'':CA_IN?'invalid contract address in config.js':'set your contract address in config.js',fails=0,stats=null;
 for(let i=0;i<90;i++)hist.push(price);
 const candles=[];let cTicks=0;
@@ -376,7 +391,7 @@ function drawInfo(g,w){let y=62;
 function drawScreen2(){const g=ctx2,w=280,h=460;g.fillStyle='#07070d';g.fillRect(0,0,w,h);
  if(FAKE){g.fillStyle='#8b8bff';g.font='bold 20px monospace';g.fillText('LIVE TRADES',14,28);g.fillStyle='#777';g.font='10px monospace';g.fillText('SIMULATED FEED',150,26);
  g.font='14px monospace';trades.forEach((t,i)=>{g.fillStyle=t.b?'#2ee59d':'#ff4d6d';g.fillText((t.b?'BUY  ':'SELL ')+('$'+t.a).padEnd(8)+fmtMC(t.p*mcScale),14,58+i*18)})}else drawStats(g,w);
- if(mode===1){g.fillStyle='rgba(255,40,60,.25)';g.fillRect(0,0,w,h)}if(mode===2){g.fillStyle='rgba(46,229,157,.15)';g.fillRect(0,0,w,h)}
+ if(mode===1||mode===4){g.fillStyle='rgba(255,40,60,.25)';g.fillRect(0,0,w,h)}if(mode===2){g.fillStyle='rgba(46,229,157,.15)';g.fillRect(0,0,w,h)}
  if(whale.t>0){const on=Math.floor(whale.t*4)%2===0;g.fillStyle=whale.b?(on?'#0a7a4f':'#06402a'):(on?'#a01030':'#500818');g.fillRect(0,40,w,110);
   g.fillStyle='#fff';g.font='bold 22px monospace';g.fillText('🐋 WHALE ALERT',14,76);g.font='bold 18px monospace';g.fillText((whale.b?'BUY  $':'SELL $')+whale.a.toLocaleString(),14,106);
   g.font='13px monospace';g.fillText(sym+' just got '+(whale.b?'aped':'dumped'),14,132)}
@@ -444,9 +459,9 @@ function hud(){
  $('src').textContent=live?(statusMsg?'· '+statusMsg:'· LIVE'):DEMO?'· DEMO (simulated)':'· '+statusMsg;
  $('chg').textContent=hasData()?(p>=0?'+':'')+p.toFixed(1)+'%'+(live?' · 24h':''):'';$('chg').className=p>=0?'up':'down';
  const r=rate(); 
- $('mood').textContent=mode===3&&act?(act.name==='distribute'?'🪂 AIRDROP TIME':'🎯 MILESTONE — '+act.name.toUpperCase()):mode===1?'🤬 RAGE — SMASHING THE DESK':mode===2?'🥳 CELEBRATING — LFG!!!':r>14?'🔥 FRENZY — "TO THE MOON"':r>8?'😎 Locked in':r>4?'😐 Watching…':r>1.5?'😟 Sweating…':'💀 Hands frozen';
+ $('mood').textContent=mode===3&&act?(act.name==='distribute'?'🪂 AIRDROP TIME':'🎯 MILESTONE — '+act.name.toUpperCase()):mode===4&&DS?(DS.kind==='bed'?'😭 SOBBING ON THE BED':'😩 PACING THE ROOM — DOWN BAD'):mode===1?'🤬 RAGE — SMASHING THE DESK':mode===2?'🥳 CELEBRATING — LFG!!!':r>14?'🔥 FRENZY — "TO THE MOON"':r>8?'😎 Locked in':r>4?'😐 Watching…':r>1.5?'😟 Sweating…':'💀 Hands frozen';
 }
-$('pump').onclick=()=>{bias=.012;biasT=20};$('dump').onclick=()=>{bias=-.012;biasT=20};
+$('pump').onclick=()=>{bias=.012;biasT=20};$('dump').onclick=()=>{bias=-.012;biasT=20};$('melt').onclick=()=>{if(mode!==3&&mode!==4){meltK=meltK==='bed'?'pace':'bed';startDespair(meltK)}};
 $('snd').onclick=e=>{soundOn=!soundOn;e.target.textContent='🔊 Sound: '+(soundOn?'ON':'OFF');if(soundOn){lastNice=0;nice()}};
 $('sim').onclick=()=>{const b58='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz',rw=()=>Array.from({length:44},()=>b58[Math.random()*58|0]).join('');
  const to=Array.from({length:1+(Math.random()*4|0)},()=>({w:rw(),a:1000+Math.random()*40000}));
@@ -485,7 +500,7 @@ async function poll(){
 }
 if(CA_OK){poll();setInterval(poll,POLL_MS)}
 if(DEV_OK&&CA_OK){pollDev();setInterval(pollDev,DEV_MS)}
-if(!DEMO)['pump','dump','auto','mile','sim'].forEach(i=>{$(i).style.display='none'});
+if(!DEMO)['pump','dump','melt','auto','mile','sim'].forEach(i=>{$(i).style.display='none'});
 // orbit
 let az=.7,el=.35,dist=5.2,drag=null;
 cv.addEventListener('pointerdown',e=>{drag=[e.clientX,e.clientY];cv.setPointerCapture(e.pointerId)});
@@ -506,15 +521,80 @@ const coinGeo=new THREE.BufferGeometry();coinGeo.setAttribute('position',new THR
 const coinsP=new THREE.Points(coinGeo,new THREE.PointsMaterial({size:.13,color:0xffd24a}));coinsP.frustumCulled=false;S.add(coinsP);
 let act=null,queue=[],drinkOn=false,drinkT=0,drinkWait=8,drinkK=0,calmT=0,pCan=null,mouseWait=2.5,mouseUse=0,pT=0,pHand=0,pTarget='kb',pHit=false,pX=0,pZ=.4;
 const cKey=new THREE.Color(0x55556a),cG=new THREE.Color(0xe8b894),cR=new THREE.Color(0xe0604f),cA=new THREE.Color(0x2ee59d);
+// ===== MELTDOWN: after a sustained dump he gets up and either cries on the bed or paces the room =====
+const DESPAIR_ON=cfg.despair!==false,DESPAIR_AFTER=Math.max(1,+cfg.despairAfterSeconds||5),DESPAIR_MAX=Math.max(12,+cfg.despairMaxSeconds||40);
+const CRY_MSG=['😭 NOT LIKE THIS…','😭 TELL MY WIFE I LOVED HER','😭 LAYING DOWN. IT IS OVER'],PACE_MSG=['😩 PACING. DOWN BAD.','😩 WALKING IT OFF…','😩 WHY DID I APE IN'];
+const mixn=(a,b,u)=>a+(b-a)*u,ezn=u=>{u=u<0?0:u>1?1:u;return u*u*(3-2*u)};
+const angd=(a,b)=>{let d=(a-b)%(2*Math.PI);if(d>Math.PI)d-=2*Math.PI;if(d<-Math.PI)d+=2*Math.PI;return d};
+const PP={x:0,y:.55,z:1.2,rx:0,ry:0,rz:0},FT=[{x:0,y:0,z:0},{x:0,y:0,z:0}],BD=[{x:0,y:0,z:-1},{x:0,y:0,z:-1}],HP=[{x:0,y:0,z:0},{x:0,y:0,z:0}],FACE={hz:0,hx:0,my:1,lid:0,br:0};
+function Lw(x,y,z){const cx=Math.cos(PP.rx),sx=Math.sin(PP.rx),cy=Math.cos(PP.ry),sy=Math.sin(PP.ry),y1=y*cx-z*sx,z1=y*sx+z*cx;return{x:PP.x+x*cy+z1*sy,y:PP.y+y1,z:PP.z-x*sy+z1*cy}}
+const rightV=a=>({x:Math.cos(a),z:-Math.sin(a)}),fwdV=a=>({x:-Math.sin(a),z:-Math.cos(a)});
+function foot(i,cx,cz,off,y,yaw){const r=rightV(yaw),f=fwdV(yaw),s=i?1:-1;
+ FT[i].x=cx+r.x*s*.14+f.x*off;FT[i].z=cz+r.z*s*.14+f.z*off;FT[i].y=y;BD[i].x=f.x;BD[i].y=0;BD[i].z=f.z}
+function hand(i,x,y,z){const p=Lw(x,y,z);HP[i].x=p.x;HP[i].y=p.y;HP[i].z=p.z}
+function sad(hx,hz,my,lid,br){FACE.hx=hx;FACE.hz=hz;FACE.my=my;FACE.lid=lid;FACE.br=br}
+function hang(sp){for(let i=0;i<2;i++)hand(i,(i?1:-1)*.4,.12,-.05+Math.sin(DS.gp+(i+1)*Math.PI)*.2*sp)}
+function standPose(w){PP.x=w.x;PP.z=w.z;PP.y=.95+Math.abs(Math.sin(w.gp))*.02*w.sp;PP.ry=w.yaw;PP.rx=-.25;PP.rz=0}
+function gait(w){for(let i=0;i<2;i++){const ph=w.gp+i*Math.PI;foot(i,w.x,w.z,Math.sin(ph)*.3*w.sp,.06+Math.max(0,Math.cos(ph))*.13*w.sp,w.yaw)}}
+function go(w,tx,tz,spd,dt){const dx=tx-w.x,dz=tz-w.z,d=Math.hypot(dx,dz);
+ if(d<=.06)return true;
+ const e=angd(Math.atan2(-dx,-dz),w.yaw);w.yaw+=Math.max(-dt*5,Math.min(dt*5,e));
+ if(Math.abs(e)<.6){const st=Math.min(d,spd*dt*(1-Math.abs(e)/.6));w.x+=dx/d*st;w.z+=dz/d*st;w.mv=true}
+ return false}
+function poseSit(k){PP.x=4;PP.z=mixn(1.55,.78,k);PP.y=mixn(.95,.77,k);PP.ry=Math.PI;PP.rx=mixn(-.25,-.1,k);PP.rz=0;
+ for(let i=0;i<2;i++)foot(i,4,mixn(1.55,1.4,k),0,.06,Math.PI);
+ hang(0);sad(.3,0,3,-.03,-.5)}
+function poseLie(k){PP.x=4;PP.z=mixn(.78,-.12,k);PP.y=mixn(.77,.96,k);PP.ry=Math.PI;PP.rx=mixn(-.1,Math.PI/2,k);PP.rz=0;
+ const arc=Math.sin(Math.PI*k)*.28;
+ for(let i=0;i<2;i++){foot(i,4,mixn(1.4,.58,k),0,mixn(.06,.8,k)+arc,Math.PI);BD[i].x=0;BD[i].y=k;BD[i].z=1-k}
+ hang(0);sad(mixn(.3,0,k),0,4,-.03,-.5)}
+function poseCry(w){poseLie(1);PP.y+=Math.sin(tt*17)*.006;
+ for(let i=0;i<2;i++){const s=i?1:-1;foot(i,4,.58,0,.8+Math.max(0,Math.sin(tt*2.6+i*Math.PI))*.07,Math.PI);BD[i].x=0;BD[i].y=1;BD[i].z=0;
+  if(Math.floor(w.st/3.5)%2===0)hand(i,s*.09+Math.sin(tt*18+i)*.012,1.09,-.2);        // hands over the eyes
+  else hand(i,s*.5,.3,.18-Math.max(0,Math.sin(tt*8+i*Math.PI))*.45)}               // pounding the mattress
+ sad(.05+Math.sin(tt*17)*.04,Math.sin(tt*2.3)*.35,5,-.035,-.55)}
+function startDespair(kind){
+ kind=kind||(Math.random()<.6?'bed':'pace');
+ const plan=kind==='bed'
+  ?[['stand'],['walk',[[1.9,1.55],[4,1.55]]],['turn',Math.PI],['sit'],['lie'],['cry'],['rise'],['unsit'],['walk',[[1.9,1.55],[.9,1.55],[.62,1.3]]],['turn',0],['seat']]
+  :[['stand'],['walk',[[1.1,2.0],[2.3,2.3]]],['pace'],['walk',[[1.1,2.0],[.62,1.3]]],['turn',0],['seat']];
+ DS={kind,plan,i:0,st:0,tot:0,leave:false,x:0,z:1.2,yaw:0,sp:0,gp:0,wp:0,sub:0,pause:0,mv:false};
+ drinkOn=false;mouseUse=0;act=null;mode=4;toast(pick(kind==='bed'?CRY_MSG:PACE_MSG))}
+function endDespair(){DS=null;PP.x=0;PP.y=.55;PP.z=1.2;PP.rx=-.12;PP.ry=0;PP.rz=0;up.position.set(0,.55,1.2);up.rotation.set(-.12,0,0)}
+function despairStep(dt,sc){const w=DS;w.st+=dt;w.tot+=dt;
+ if(!w.leave&&((sc>-.15&&w.tot>9)||sc>.6||w.tot>DESPAIR_MAX))w.leave=true;
+ const s=w.plan[w.i],T=s[0];let nx=false;w.mv=false;
+ if(T==='walk'){const p=s[1][w.wp];if(go(w,p[0],p[1],1.15,dt)){w.wp++;if(w.wp>=s[1].length)nx=true}}
+ else if(T==='turn'){const e=angd(s[1],w.yaw);w.yaw+=Math.max(-dt*5,Math.min(dt*5,e));if(Math.abs(e)<.05){w.yaw=s[1];nx=true}}
+ else if(T==='pace'){if(w.pause>0)w.pause-=dt;else if(go(w,w.sub?-2.3:2.3,2.3,1.05,dt)){if(w.leave)nx=true;else{w.sub^=1;w.pause=.7}}}
+ w.sp+=((w.mv?1:0)-w.sp)*Math.min(1,dt*6);w.gp+=dt*6.3*w.sp;
+ const sobF=()=>sad(.32+Math.sin(tt*16)*.05,Math.sin(tt*13)*.05,4,-.03,-.5);
+ if(T==='walk'||T==='turn'||T==='pace'){standPose(w);gait(w);
+  if(T==='pace'){for(let i=0;i<2;i++)hand(i,(i?1:-1)*.2+Math.sin(tt*21+i)*.015,1.12,-.02);}else hang(w.sp);sobF()}
+ else if(T==='stand'){const u=ezn(w.st/.9);PP.x=mixn(0,.62,u);PP.y=mixn(.55,.95,u);PP.z=1.2;PP.rx=mixn(-.12,-.25,u);PP.ry=0;PP.rz=0;
+  for(let i=0;i<2;i++)foot(i,PP.x,1.2,mixn(.7,0,u),.06,0);hang(0);sobF();if(w.st>=.9){nx=true;w.x=.62;w.z=1.2;w.yaw=0}}
+ else if(T==='seat'){const u=ezn(w.st/1);PP.x=mixn(w.x,0,u);PP.z=mixn(w.z,1.2,u);PP.y=mixn(.95,.55,u);PP.rx=mixn(-.25,-.12,u);PP.ry=0;PP.rz=0;
+  for(let i=0;i<2;i++)foot(i,PP.x,PP.z,mixn(0,.7,u),.06,0);hang(0);sobF();if(w.st>=1)nx=true}
+ else if(T==='sit'){poseSit(ezn(w.st/1.1));if(w.st>=1.1)nx=true}
+ else if(T==='lie'){poseLie(ezn(w.st/1.6));if(w.st>=1.6)nx=true}
+ else if(T==='cry'){poseCry(w);if(w.leave&&w.st>2)nx=true}
+ else if(T==='rise'){poseLie(1-ezn(w.st/1.6));if(w.st>=1.6)nx=true}
+ else if(T==='unsit'){poseSit(1-ezn(w.st/1.1));if(w.st>=1.1){nx=true;w.x=4;w.z=1.55;w.yaw=Math.PI;w.gp=0}}
+ for(let i=0;i<2;i++)handT[i].set(HP[i].x,HP[i].y,HP[i].z);
+ if(nx){w.i++;w.st=0;w.wp=0;if(w.plan[w.i]&&w.plan[w.i][0]==='pace'){w.sub=1;w.pause=0}if(w.i>=w.plan.length)return false}
+ return true}
 function frame(now){
  requestAnimationFrame(frame);
  const dt=Math.min(.05,(now-last)/1000);last=now;tt+=dt;tc+=dt;
  if(tc>.2){tc=0;tick()}
  const r=rate(),exc=Math.max(-1,Math.min(1,(r-5)/12)),sc=(rawRate()-5)/8,pm=mode;
  if(act){act.t+=dt;if(act.t>=act.dur){act=null;mode=0}}
- else if(queue.length&&mode!==1)startAct(queue.shift());
+ else if(queue.length&&mode!==1&&mode!==4)startAct(queue.shift());
  if(mode===3){}else if(mode===0){if(sc<-.75)mode=1;else if(sc>.9)mode=2}
  else if(mode===1&&sc>-.35)mode=0;else if(mode===2&&sc<.45)mode=0;
+ if(mode===1){rageT+=dt;if(DESPAIR_ON&&despCool<=0&&rageT>DESPAIR_AFTER&&sc<-.5)startDespair()}else rageT=0;
+ despCool-=dt;
+ if(mode===4&&DS){if(!despairStep(dt,sc)){endDespair();mode=0;despCool=25;rageT=0}}else if(DS)endDespair();else if(mode===4)mode=0;
  if(mode!==pm){hud();drawScreen();drawScreen2();drawScreen3();if(mode===2&&Math.random()<.5)nice();if(mode===2)toast(pick(PUMP));if(mode===1)toast(pick(DUMP))}
  // mouse
  mouseWait-=dt;mouseUse-=dt;
@@ -596,7 +676,9 @@ function frame(now){
  mouth.scale.set(mode?1.5:1+Math.max(0,exc)*.5,A?A.my:mode===1?2.5:mode===2?5:1+Math.max(0,exc)*3,1);mouth.position.y=mode===0&&exc<0?-.105:-.095;
  lids.forEach(l=>l.position.y=.16+(A?A.lid:mode===1?-.025:mode===2?.045:Math.max(0,exc)*.04+(exc<0?exc*.03:0)));
  brows.forEach(b=>b.rotation.z=b.userData.sd*(A?A.br:mode===1?.55:mode===2?-.12:-.04-Math.max(0,-exc)*.3));
- skin.color.lerp(mode===1?cR:cG,Math.min(1,dt*4));
+ skin.color.lerp((mode===1||mode===4)?cR:cG,Math.min(1,dt*4));
+ if(mode===4&&DS){up.position.set(PP.x,PP.y,PP.z);up.rotation.set(PP.rx,PP.ry,PP.rz);
+  head.rotation.z=FACE.hz;head.rotation.x=FACE.hx;mouth.scale.set(1.5,FACE.my,1);lids.forEach(l=>l.position.y=.16+FACE.lid);brows.forEach(b=>b.rotation.z=b.userData.sd*FACE.br)}
  // monitor shake / flash
  shake*=Math.exp(-dt*7);const sh_=shake>.01?shake:0;
  const jx=(Math.random()-.5)*.08*sh_,jy=(Math.random()-.5)*.04*sh_,jr=(Math.random()-.5)*.06*sh_;
@@ -621,12 +703,19 @@ function frame(now){
  const pr=mode===3&&act&&act.name==='distribute'&&act.t>=1&&act.t<1.4;btnTop.position.y+=((pr?.95:.97)-btnTop.position.y)*Math.min(1,dt*30);btnMat.emissiveIntensity=pr?2:.4+Math.sin(tt*3)*.15;
  lg.position.set(0,up.position.y,up.position.z);
  up.updateMatrixWorld(true);
+ if(mode===4&&DS){lg.visible=false;for(let i=0;i<2;i++){const s_=i?1:-1,hp=Lw(s_*.15,.08,0);legIK(i,new V(hp.x,hp.y,hp.z),new V(FT[i].x,FT[i].y+.1,FT[i].z),new V(BD[i].x,BD[i].y,BD[i].z),DS.yaw)}
+  const cry_=DS.plan[DS.i][0];tearAcc+=dt*(cry_==='cry'?16:10);
+  while(tearAcc>=1){tearAcc-=1;const t=tears.find(q=>q.life<=0);if(t){const sx=Math.random()<.5?-1:1;t.m.position.copy(head.localToWorld(new V(sx*.058,0,-.135)));t.life=.9;t.vx=sx*.25+(Math.random()-.5)*.2;t.vy=.15+Math.random()*.2;t.vz=(Math.random()-.5)*.2;t.m.visible=true}}}
+ else{lg.visible=true;tearAcc=0;wLegs.forEach(l=>{l.th.visible=l.sn.visible=l.kn.visible=l.ft.visible=false})}
+ tears.forEach(t=>{if(t.life>0){t.life-=dt;t.vy-=4*dt;t.m.position.x+=t.vx*dt;t.m.position.y+=t.vy*dt;t.m.position.z+=t.vz*dt;if(t.life<=0)t.m.visible=false}});
  [0,1].forEach(i=>{const s=up.localToWorld(sh[i].clone()),h=hands[i].position,sd=i?1:-1;
-  const eo=(mode===2||(mode===3&&act&&act.name!=='lockin'&&act.name!=='chug'&&!(act.name==='distribute'&&act.t<1.7)))?new V(sd*.3,.1,.1):mode===1?new V(sd*.3,-.1,.2):new V(sd*.2,-.25,.3);
+  const eo=mode===4?new V(sd*.32,.02,.05):(mode===2||(mode===3&&act&&act.name!=='lockin'&&act.name!=='chug'&&!(act.name==='distribute'&&act.t<1.7)))?new V(sd*.3,.1,.1):mode===1?new V(sd*.3,-.1,.2):new V(sd*.2,-.25,.3);
   const el_=s.clone().add(h).multiplyScalar(.5).add(eo);
   seg(segs[i*2],s,el_);seg(segs[i*2+1],el_,h)});
- cam.position.set(Math.sin(az)*Math.cos(el)*dist,1.2+Math.sin(el)*dist,.7+Math.cos(az)*Math.cos(el)*dist);
- cam.lookAt(0,1.3,.4);R.render(S,cam);
+ camF+=((mode===4&&DS?1:0)-camF)*Math.min(1,dt*1.5);
+ const ccx=camF*PP.x*.5,ccz=camF*(PP.z-1.2)*.3,dd=dist+camF*Math.abs(PP.x)*.3;
+ cam.position.set(ccx+Math.sin(az)*Math.cos(el)*dd,1.2+Math.sin(el)*dd,.7+ccz+Math.cos(az)*Math.cos(el)*dd);
+ cam.lookAt(ccx,1.3,.4+ccz);R.render(S,cam);
 }
 drawScreen();drawScreen2();drawScreen3();drawCal();setCoinUI();hud();requestAnimationFrame(frame);
 </script></body></html>

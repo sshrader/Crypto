@@ -81,6 +81,18 @@ window.TRADER_CONFIG = {
                characters or fewer) so it fits.                            */
   signText: 'The Trader',
 
+  /* ---------- 4c. MELTDOWN -----------------------------------------------
+     When the coin keeps dumping, he first rages at his desk. If it goes on
+     long enough he gets up and either lies on his bed crying or paces the
+     room clutching his head, then walks back to his chair once things calm
+     down (or after despairMaxSeconds).
+     despair               false = never leave the chair (rage only)
+     despairAfterSeconds   seconds of rage before he breaks down (default 5)
+     despairMaxSeconds     longest he stays away from the desk (min 12, default 40) */
+  despair: true,
+  despairAfterSeconds: 5,
+  despairMaxSeconds: 40,
+
   /* ---------- 5. SOUNDS ------------------------------------------------
      niceSound  the "nice" clip (path or URL). Visitors must click the
                 Sound button once before any audio can play.            */

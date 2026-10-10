@@ -107,7 +107,12 @@ and a Solscan link. Wallets already in history when the page loads are ignored.
 ## 6. Settings reference (all in `config.js`, each commented there)
 
 `ca` · `name` `symbol` `twitter` `twitterUrl` `logo` `logoFromDexScreener` · `pollSeconds` `candleSeconds` `sensitivity` ·
-`devWallet` `rpc` `devPollSeconds` `ignoreWallets` · `allowUrlOverrides` `demo` `fakeFeeds` · `signText` · `niceSound` · `milestones`
+`devWallet` `rpc` `devPollSeconds` `ignoreWallets` · `allowUrlOverrides` `demo` `fakeFeeds` · `signText` · `despair` `despairAfterSeconds` `despairMaxSeconds` · `niceSound` · `milestones`
+
+**Meltdown:** if the coin keeps dumping, he rages at the desk first; after `despairAfterSeconds` (default 5) of that he stands up and
+either lies on the bed crying (tears, hands over his eyes, pounding the mattress) or paces the room clutching his head, then walks
+back and sits down once the price steadies (or after `despairMaxSeconds`). The camera drifts to follow him. Set `despair: false` to
+keep him in the chair. In demo mode the **😭 Meltdown** button triggers it (alternating bed / pacing).
 
 `signText` is the words on the neon sign on the back wall of the trader's blacklit bedroom (default "The Trader"). The room is
 cut-away: walls and ceiling disappear when you orbit around to the outside, so you can always see in.
