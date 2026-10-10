@@ -10,7 +10,7 @@ window.TRADER_CONFIG = {
      Change this to your real coin, or to ANY other Solana coin to test.
      Test idea: BONK  DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263
      (check the address on dexscreener.com before relying on it)        */
-  ca: 'CAmp5hUNFvU5UH8BEFzVAsEAfoLi2HxGeoEJriZc7BZ6',
+  ca: '4gL5SoEobotrQLWkgCgPnpZjL2WHEfPF7QRxWYHKpump',
 
   /* Optional branding. Leave '' to auto-fill from DexScreener
      (name, ticker, logo and X link are read from the coin's listing). */
