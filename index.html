@@ -2,7 +2,7 @@
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Live 3D meme-coin day trader that reacts to the real market cap.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🚀%3C/text%3E%3C/svg%3E">
+<link id="fav" rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🚀%3C/text%3E%3C/svg%3E">
 <title>Meme Day Trader</title>
 <style>
 :root{--bg:#0b0b14;--fg:#e8e8f5;--up:#2ee59d;--down:#ff4d6d;--card:rgba(20,20,35,.85);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -227,7 +227,7 @@ function setCoinUI(){uiKey=[COIN.name,COIN.symbol,COIN.logo,COIN.twitterUrl].joi
  if(/^https:\/\//.test(COIN.twitterUrl||''))tw.href=COIN.twitterUrl;else tw.removeAttribute('href');
  document.title=(COIN.name||'Meme Day Trader')+' · Live Trader';
  const lg=$('logo'),ini=(COIN.symbol||COIN.name||'?').replace('$','')[0]||'?';lg.textContent='';
- if(COIN.logo){const im=document.createElement('img');im.src=COIN.logo;im.alt='';im.onerror=()=>{im.remove();lg.textContent=ini};lg.appendChild(im)}else lg.textContent=ini;
+ if(COIN.logo){const im=document.createElement('img');im.src=COIN.logo;im.alt='';im.onload=()=>{const f=document.getElementById('fav');if(f)f.href=COIN.logo};im.onerror=()=>{console.warn('logo file not found: '+COIN.logo);im.remove();lg.textContent=ini};lg.appendChild(im)}else lg.textContent=ini;
  drawScreen3()}
 $('ca').ondblclick=async()=>{if(!COIN.ca)return;let ok=false;try{await navigator.clipboard.writeText(COIN.ca);ok=true}catch(e){try{const rg=document.createRange();rg.selectNodeContents($('ca'));const se=getSelection();se.removeAllRanges();se.addRange(rg);ok=document.execCommand('copy')}catch(e2){}}toast(ok?'📋 CA copied!':'Press Ctrl/Cmd + C to copy')};
 const sh6=w=>w.slice(0,4)+'…'+w.slice(-4),fa=v=>v>=1e6?(v/1e6).toFixed(2)+'M':v>=1e3?(v/1e3).toFixed(1)+'K':Math.round(v).toString();
@@ -396,7 +396,7 @@ async function poll(){
   if(!COIN.name&&p.baseToken.name)COIN.name=String(p.baseToken.name).slice(0,40);
   if(!COIN.symbol&&p.baseToken.symbol)COIN.symbol='$'+String(p.baseToken.symbol).slice(0,12);sym=COIN.symbol||'$COIN';
   const inf=p.info||{};
-  if(!COIN.logo&&/^https:\/\//.test(inf.imageUrl||''))COIN.logo=inf.imageUrl;
+  if(cfg.logoFromDexScreener===true&&!COIN.logo&&/^https:\/\//.test(inf.imageUrl||''))COIN.logo=inf.imageUrl;
   const tws=(inf.socials||[]).find(x=>x&&x.type==='twitter'&&/^https:\/\//.test(x.url||''));
   if(tws&&!COIN.twitterUrl){COIN.twitterUrl=tws.url;if(!COIN.twitter)COIN.twitter='@'+tws.url.split('?')[0].split('/').filter(Boolean).pop()}
   stats={t:Date.now(),dex:p.dexId,pc:p.priceChange||{},vol:p.volume||{},tx:p.txns||{},liq:(p.liquidity||{}).usd};

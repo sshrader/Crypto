@@ -74,9 +74,17 @@ let passed = 0; const t = async (name, fn) => { try { await fn(); passed++; cons
     assert.strictEqual(o.target, 0.000012); assert.strictEqual(o.price, 0.000012);
     assert.strictEqual(Math.round(o.mc()), 12000); assert.strictEqual(o.fmtMC(o.mc()), '$12.0K');
     assert.strictEqual(o.COIN.name, 'Test Coin'); assert.strictEqual(o.COIN.symbol, '$TST'); assert.strictEqual(o.COIN.twitter, '@testcoin');
-    assert(o.COIN.logo.startsWith('https://'));
+    assert.strictEqual(o.COIN.logo, 'assets/logo.png', 'DexScreener logo must NOT override the configured logo');
     assert.deepStrictEqual(o.MILES.map(m => m.done), [true, true, false, false, false, false, false], 'already-passed milestones must not replay');
     assert.strictEqual(o.queue.length, 0); o.run(300);
+  });
+  await t('logo: config file wins; DexScreener logo only if opted in', async () => {
+    const a = boot({ cfg: { logo: '' }, fetchImpl: () => live1() }); await a.poll();
+    assert.strictEqual(a.COIN.logo, '', 'DexScreener logo used without opt-in');
+    const b = boot({ cfg: { logo: '', logoFromDexScreener: true }, fetchImpl: () => live1() }); await b.poll();
+    assert(b.COIN.logo.startsWith('https://cdn.example/'), 'opt-in should use DexScreener logo');
+    const c = boot({ cfg: { logo: 'assets/mine.webp', logoFromDexScreener: true }, fetchImpl: () => live1() }); await c.poll();
+    assert.strictEqual(c.COIN.logo, 'assets/mine.webp', 'configured logo must beat DexScreener even when opted in');
   });
   await t('no random price movement without data or demo; real moves drive milestones', async () => {
     const seen = new Set(); const o = boot({ fetchImpl: () => live1() });

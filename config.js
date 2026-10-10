@@ -10,15 +10,23 @@ window.TRADER_CONFIG = {
      Change this to your real coin, or to ANY other Solana coin to test.
      Test idea: BONK  DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263
      (check the address on dexscreener.com before relying on it)        */
-  ca: 'GnLb3Rvt81YAQazRw1A7vu9LTwedLEFXBhhXMTxupump',
+  ca: 'CAmp5hUNFvU5UH8BEFzVAsEAfoLi2HxGeoEJriZc7BZ6',
 
-  /* Optional branding. Leave '' to auto-fill from DexScreener
-     (name, ticker, logo and X link are read from the coin's listing). */
+  /* Optional branding. Leave '' to auto-fill name, ticker and X link
+     from DexScreener's listing. */
   name: '',            // e.g. 'Bonk Chad'
   symbol: '',          // e.g. '$BCHAD'
   twitter: '',         // e.g. '@bonkchad'
   twitterUrl: '',      // e.g. 'https://x.com/bonkchad'  (must start with https://)
-  logo: '',            // image URL (https://...) or a data: URL
+
+  /* LOGO: your own file. Save it as assets/logo.png (square works best -
+     it is shown in a circle and also used as the browser-tab icon).
+     To use a different file name or type, change the path here, e.g.
+     'assets/mylogo.webp'. If the file is missing, the page shows a
+     letter circle instead. DexScreener's logo is NOT used unless you
+     set logoFromDexScreener: true.                                      */
+  logo: 'assets/logo.png',
+  logoFromDexScreener: false,
 
   /* ---------- 2. LIVE DATA --------------------------------------------
      Prices and market cap come from the DexScreener public API.
@@ -27,8 +35,8 @@ window.TRADER_CONFIG = {
      sensitivity    how strongly price moves drive his typing speed and
                     rage / celebration. 1 = default, 2 = twitchier,
                     0.5 = calmer.                                        */
-  pollSeconds: 2,
-  candleSeconds:1 ,
+  pollSeconds: 4,
+  candleSeconds: 10,
   sensitivity: 1,
 
   /* ---------- 3. AIRDROP WATCHER (optional) ---------------------------

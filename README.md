@@ -11,6 +11,7 @@ meme-trader-live/
   index.html        the whole app (Three.js scene + logic)
   config.js         <-- the file you edit: coin address, dev wallet, milestones, switches
   assets/nice.mp3   the "nice" sound
+  assets/logo.png   <-- YOUR logo: add this file (not included)
   vendor/           optional: drop three.min.js here to self-host (see vendor/README.txt)
   tests/run-tests.js  node tests/run-tests.js
   .nojekyll         keeps GitHub Pages from reprocessing the files
@@ -47,13 +48,18 @@ To test with any other coin, put its address there — e.g. BONK `DezXAZ8z7PnrnR
 (confirm any address on dexscreener.com first). While testing on **localhost** (or by opening the file directly) you can also
 skip editing the file and use the URL: `http://localhost:8000/?ca=<address>`.
 
-Name, ticker, logo and X link are filled in automatically from the coin's DexScreener listing. Set `name`, `symbol`,
-`twitter`, `twitterUrl`, `logo` in `config.js` only if you want to override them.
+Name, ticker and X link are filled in automatically from the coin's DexScreener listing. Set `name`, `symbol`,
+`twitter`, `twitterUrl` in `config.js` only if you want to override them.
+
+**Logo:** the page uses your own file, not DexScreener's. Save your logo as `assets/logo.png` (square works best; it
+is shown in a circle and also becomes the browser-tab icon). For a different file name or type (jpg, webp, svg), change `logo:` in
+`config.js` to match, e.g. `'assets/mylogo.webp'`. Until the file exists the page shows a letter circle.
+Set `logoFromDexScreener: true` only if you ever want DexScreener's logo as a fallback.
 
 ## 3. What is real and what is decoration
 
 **Real (from DexScreener, refreshed every `pollSeconds`):** price, market cap (FDV if market cap isn't listed), 24h change,
-the left monitor's stats (5m/1h/6h/24h change, volume, buys/sells, liquidity), name/logo/X link, and everything the trader
+the left monitor's stats (5m/1h/6h/24h change, volume, buys/sells, liquidity), name/ticker/X link, and everything the trader
 does — typing speed, mood, rage, celebration, milestones, the candle chart.
 
 **Not market data:** the character and room, the calendar, the cans, the joke text on the chart ("LEVERAGE 100x…").
@@ -115,6 +121,8 @@ milestone, Sim airdrop) so you can preview every animation. It is for testing on
 - **Stuck on "no trading pair found":** check the address on dexscreener.com. The page only reads Solana pairs where your token is the base token.
 - **"feed error" only on the hosted site:** open the browser console (F12) and look at the failed request; ad-blockers and some corporate networks block api.dexscreener.com.
 - **Label says "PRICE (USD)" instead of "MARKET CAP":** DexScreener lists no market cap/FDV for that coin, so milestones are disabled.
+- **Logo shows a letter instead of my picture:** the file isn't at the path in `config.js` (default `assets/logo.png`). Check the name and
+  capitalization exactly — GitHub Pages and most hosts are case-sensitive (`Logo.PNG` is not `logo.png`).
 - **No sound:** browsers block audio until the visitor taps the Sound button once. Check `assets/nice.mp3` exists.
 - **Airdrop never fires:** confirm `devWallet`, that the tokens leave *that* wallet, the RPC works (console shows errors), and the receiver isn't in `ignoreWallets`.
 
