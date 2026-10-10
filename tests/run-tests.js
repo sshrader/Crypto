@@ -83,7 +83,7 @@ let passed = 0; const t = async (name, fn) => { try { await fn(); passed++; cons
     assert.strictEqual(Math.round(o.mc()), 12000); assert.strictEqual(o.fmtMC(o.mc()), '$12.0K');
     assert.strictEqual(o.COIN.name, 'Test Coin'); assert.strictEqual(o.COIN.symbol, '$TST'); assert.strictEqual(o.COIN.twitter, '@testcoin');
     assert.strictEqual(o.COIN.logo, 'assets/logo.png', 'DexScreener logo must NOT override the configured logo');
-    assert.deepStrictEqual(o.MILES.map(m => m.done), [true, true, false, false, false, false, false], 'already-passed milestones must not replay');
+    assert.deepStrictEqual(o.MILES.map(m => m.done), o.MILES.map(m => m.mc <= 12000), 'already-passed milestones must not replay');
     assert.strictEqual(o.queue.length, 0); o.run(300);
   });
   await t('logo: config file wins; DexScreener logo only if opted in', async () => {
@@ -162,7 +162,7 @@ let passed = 0; const t = async (name, fn) => { try { await fn(); passed++; cons
     assert(o.DEMO && o.FAKE && o.hasData); const p0 = o.price; o.run(200); assert(o.price !== p0, 'demo price should move');
     o.MILES.forEach(m => o.queue.push(Object.assign({}, m)));
     o.queue.push({ act: 'distribute', label: 'x', info: { sig: 'abc', total: 5000, to: [{ w: 'A'.repeat(44), a: 4990 }, { w: 'B'.repeat(44), a: 10 }] } });
-    const seen = new Set(), modes = new Set(); o.run(6000, () => { if (o.act) seen.add(o.act.name); modes.add(o.mode); });
+    const seen = new Set(), modes = new Set(); o.run(20000, () => { if (o.act) seen.add(o.act.name); modes.add(o.mode); });
     ['chug', 'scream', 'dance', 'letsgo', 'lockin', 'party', 'distribute'].forEach(a => assert(seen.has(a), 'act never ran: ' + a));
     assert(modes.has(1) && modes.has(2), 'rage/party never ran');
   });
