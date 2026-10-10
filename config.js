@@ -109,6 +109,21 @@ window.TRADER_CONFIG = {
     { mc: 20000,  act: 'letsgo', label: ['🔥 LET HIM COOK!!!', "🔥 WE'RE SO BACK!!!", "🔥 BIG W — LET'S GOOO"], sound: '' },
     { mc: 30000,  act: 'lockin', label: ['🔒 LOCKED IN', '🔒 GRIND MODE: ON', '🔒 MAIN CHARACTER MODE'], sound: '' },
     { mc: 50000,  act: 'party',  label: ['🎉 50K — ABSOLUTELY GOATED 🐐', '🎉 50K — EATING GOOD'], sound: '' },
-    { mc: 100000, act: 'party',  label: ['🚀 100K — WE ATE, NO CRUMBS', '🚀 100K — HUGE W IN THE CHAT'], sound: '' }
+    { mc: 100000, act: 'party',  label: ['🚀 100K — WE ATE, NO CRUMBS', '🚀 100K — HUGE W IN THE CHAT'], sound: '' },
+    { mc: 125000,  act: 'dance', label: ['🕺 W RIZZ ACTIVATED', '🕺 SLAY, TRADER, SLAY', '🕺 SKIBIDI BULLISH'], sound: '' },
+    { mc: 150000,  act: 'letsgo', label: ['🔥 NO CAP, WE ARE COOKING', '🔥 ABSOLUTE CINEMA', '🔥 IT\'S SO BACK'], sound: '' },
+    { mc: 200000,  act: 'scream', label: ['📣 WE\'RE ALL GONNA MAKE IT', '📣 BIG BACK ENERGY', '📣 SHEEEESH, PART 2'], sound: '' },
+    { mc: 250000,  act: 'lockin', label: ['🔒 SIGMA GRINDSET', '🔒 MAIN CHARACTER ENERGY', '🔒 ZERO DISTRACTIONS, ALL GAINS'], sound: '' },
+    { mc: 300000,  act: 'dance', label: ['🕺 AURA +5000', '🕺 IT\'S GIVING GENERATIONAL WEALTH', '🕺 FANUM TAX THE GAINS'], sound: '' },
+    { mc: 400000,  act: 'party', label: ['🎉 W STREAK UNLOCKED', '🎉 EATING GOOD TONIGHT', '🎉 CERTIFIED HOOD CLASSIC'], sound: '' },
+    { mc: 500000,  act: 'letsgo', label: ['🔥 HALF A MIL — NO CRUMBS', '🔥 HALFWAY TO A MILLY, BESTIE', '🔥 DIAMOND HANDS PAID OFF'], sound: '' },
+    { mc: 600000,  act: 'chug', label: ['🥤 HYDRATE, CHAMP', '🥤 ENERGY DRINK FOR THE GRIND', '🥤 SIP SIP, WE\'RE UP BIG'], sound: '' },
+    { mc: 700000,  act: 'scream', label: ['📣 LOCK IN, FAM', '📣 THIS IS NOT A DRILL', '📣 WE\'RE IN THE ENDGAME'], sound: '' },
+    { mc: 800000,  act: 'dance', label: ['🕺 CERTIFIED BANGER', '🕺 RIZZ OF THE CENTURY', '🕺 THE VIBES ARE IMMACULATE'], sound: '' },
+    { mc: 900000,  act: 'lockin', label: ['🔒 SO CLOSE I CAN TASTE IT', '🔒 DON\'T BLINK. DON\'T SELL.', '🔒 FINAL BOSS MODE'], sound: '' },
+    { mc: 1000000, act: 'party', label: ['🏆 MILLIONAIRE ARC COMPLETE', '🏆 1M — THE PRIME OF OUR LIVES', '🏆 WE\'RE SO BACK IT\'S ILLEGAL'], sound: '' },
+    { mc: 2000000, act: 'party', label: ['🚀 2M — GENERATIONAL, NO CAP', '🚀 2M — CALL IT A BIG W, BESTIE'], sound: '' },
+    { mc: 5000000, act: 'party', label: ['👑 5M — LEGENDARY STATUS', '👑 5M — HISTORY IS BEING MADE'], sound: '' },
+    { mc: 10000000, act: 'party', label: ['🌕 10M — WE ARE SO BACK, HE IS THE GOAT', '🌕 10M — TELL MY GRANDKIDS'], sound: '' }
   ]
 };
