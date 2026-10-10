@@ -29,6 +29,7 @@ window.TRADER_CONFIG = {
      load, a plain "Open @user on X" link is shown instead.                */
   tweetUser: '@synxer',
   showTweet: true,
+  tweetRefreshSeconds: 30,   // how often to look for a newer post (min 15). 0 = only load once.
 
   /* LOGO: your own file. Save it as assets/logo.png (square works best -
      it is shown in a circle and also used as the browser-tab icon).

@@ -118,11 +118,11 @@ and a Solscan link. Wallets already in history when the page loads are ignored.
 ## 6. Settings reference (all in `config.js`, each commented there)
 
 `ca` · `name` `symbol` `twitter` `twitterUrl` `logo` `logoFromDexScreener` · `pollSeconds` `candleSeconds` `sensitivity` ·
-`devWallet` `rpc` `devPollSeconds` `ignoreWallets` · `allowUrlOverrides` `demo` `fakeFeeds` · `tweetUser` `showTweet` · `signText` · `despair` `despairAfterSeconds` `despairMaxSeconds` · `niceSound` · `milestones`
+`devWallet` `rpc` `devPollSeconds` `ignoreWallets` · `allowUrlOverrides` `demo` `fakeFeeds` · `tweetUser` `showTweet` `tweetRefreshSeconds` · `signText` · `despair` `despairAfterSeconds` `despairMaxSeconds` · `niceSound` · `milestones`
 
 **Latest post from X:** a box under "Trader mood" shows the newest post from `tweetUser` (default: the coin's X account from `twitter` /
 `twitterUrl`, or the one DexScreener lists). It uses X's official embedded timeline, which loads a script from platform.twitter.com
-(set `showTweet: false` to turn it off). X sometimes shows logged-out visitors an older or empty timeline, and ad-blockers block it; when it can't
+(set `showTweet: false` to turn it off). It re-checks every `tweetRefreshSeconds` (default 30, minimum 15, `0` = never; paused while the tab is hidden). X sometimes shows logged-out visitors an older or empty timeline, and ad-blockers block it; when it can't
 load, a plain "Open @user on X" link is shown instead. For a guaranteed latest post you would need X's paid API behind a small server function.
 
 **Meltdown:** if the coin keeps dumping, he rages at the desk first; after `despairAfterSeconds` (default 5) of that he stands up and
