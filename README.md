@@ -106,8 +106,11 @@ and a Solscan link. Wallets already in history when the page loads are ignored.
 
 ## 6. Settings reference (all in `config.js`, each commented there)
 
-`ca` · `name` `symbol` `twitter` `twitterUrl` `logo` · `pollSeconds` `candleSeconds` `sensitivity` ·
-`devWallet` `rpc` `devPollSeconds` `ignoreWallets` · `allowUrlOverrides` `demo` `fakeFeeds` · `niceSound` · `milestones`
+`ca` · `name` `symbol` `twitter` `twitterUrl` `logo` `logoFromDexScreener` · `pollSeconds` `candleSeconds` `sensitivity` ·
+`devWallet` `rpc` `devPollSeconds` `ignoreWallets` · `allowUrlOverrides` `demo` `fakeFeeds` · `signText` · `niceSound` · `milestones`
+
+`signText` is the words on the neon sign on the back wall of the trader's blacklit bedroom (default "The Trader"). The room is
+cut-away: walls and ceiling disappear when you orbit around to the outside, so you can always see in.
 
 `sensitivity`: 1 = default, higher = twitchier (rages/celebrates on smaller moves), lower = calmer.
 Meme coins move fast, so if he is raging or celebrating constantly, try `0.5`.
