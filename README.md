@@ -118,7 +118,18 @@ and a Solscan link. Wallets already in history when the page loads are ignored.
 ## 6. Settings reference (all in `config.js`, each commented there)
 
 `ca` · `name` `symbol` `twitter` `twitterUrl` `logo` `logoFromDexScreener` · `pollSeconds` `candleSeconds` `sensitivity` ·
-`devWallet` `rpc` `devPollSeconds` `ignoreWallets` · `allowUrlOverrides` `demo` `fakeFeeds` · `signText` · `despair` `despairAfterSeconds` `despairMaxSeconds` · `niceSound` · `milestones`
+`devWallet` `rpc` `devPollSeconds` `ignoreWallets` · `allowUrlOverrides` `demo` `fakeFeeds` · `signText` · `roomUpgrades` `aura` `voice` `voiceName` `sfx` · `despair` `despairAfterSeconds` `despairMaxSeconds` · `niceSound` · `milestones`
+
+**Room upgrades:** the bedroom fills up as the real market cap climbs: trophy shelf (25K), gold chain (50K), car poster, sunglasses and a second
+shelf (100K), gold bars (250K), disco ball (500K), crown and gold chair trim (1M), gold rug ring (5M). Cup noodles and a pizza box sit on the
+desk while it is below 50K. If the cap falls 15% below a level, that item goes away again. Needs a coin that has a market cap on DexScreener.
+In demo mode the **🏠 Room ⬆ / ⬇** buttons step through the tiers. `roomUpgrades: false` turns it off.
+
+**Aura:** a vibes score under "Trader mood". It drifts up on pumps and down on dumps, jumps on milestones (+500), room upgrades (+150), airdrops
+and celebrations, and drops on rage (-120) and meltdowns (-400). It is not market data. `aura: false` hides it.
+
+**Voice and sound:** click **Sound** once (browsers require it). Then he talks (browser speech synthesis; which voice you hear depends on the visitor's
+device) and you get synthesized punch, can-crush, level-up, sad-trombone and cash sounds, plus the "nice" clip. `voice`, `voiceName` and `sfx` in `config.js`.
 
 **Meltdown:** if the coin keeps dumping, he rages at the desk first; after `despairAfterSeconds` (default 5) of that he stands up and
 either lies on the bed crying (tears, hands over his eyes, pounding the mattress) or paces the room clutching his head, then walks

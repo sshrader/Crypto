@@ -18,24 +18,24 @@ const res = (body, ok = true) => ({ ok, status: ok ? 200 : 500, json: async () =
 function boot({ cfg = {}, loc = { protocol: 'https:', hostname: 'example.com', search: '' }, hidden = false, fetchImpl, patch } = {}) {
   const win = {}; new Function('window', configSrc)(win);
   Object.assign(win.TRADER_CONFIG, { ca: MINT }, cfg);
-  const fetched = [];
+  const fetched = [], spoken = [];
   const doc = { createElement: () => mk(), getElementById: () => mk(), body: { insertAdjacentHTML() {} }, hidden, title: '' };
   const g = { THREE: new Proxy({}, { get: () => mk() }), window: win, document: doc, location: loc,
     fetch: async (u, o) => { fetched.push(String(u)); if (!fetchImpl) throw new Error('offline'); return fetchImpl(String(u), o); },
     navigator: { clipboard: { writeText: async () => {} } }, getSelection: () => mk(),
-    Audio: class { play() { return Promise.resolve(); } }, SpeechSynthesisUtterance: class {}, speechSynthesis: { cancel() {}, speak() {} },
+    Audio: class { play() { return Promise.resolve(); } }, SpeechSynthesisUtterance: class { constructor(x) { this.text = x; } }, speechSynthesis: { cancel() {}, speak(u) { spoken.push(u.text); } },
     requestAnimationFrame: () => 0, performance: { now: () => 0 }, innerWidth: 800, innerHeight: 600, devicePixelRatio: 1,
     addEventListener() {}, setInterval: () => 0, setTimeout: () => 0, console: { log() {}, warn() {}, error() {} } };
   let js = mainJs; if (patch) js = patch(js);
   const names = Object.keys(g);
-  const exp = `;return {startDespair,get DS(){return DS},get PP(){return PP},get FT(){return FT},frame,poll,pollDev,parseAirdrop,hud,fmtMC,mc,queue,MILES,
+  const exp = `;return {PROPS,get aura(){return aura},setRoom(v){roomForce=v},setSound(v){soundOn=v},say,sfx,startDespair,get DS(){return DS},get PP(){return PP},get FT(){return FT},frame,poll,pollDev,parseAirdrop,hud,fmtMC,mc,queue,MILES,
     get live(){return live},get price(){return price},get statusMsg(){return statusMsg},get mode(){return mode},get stats(){return stats},
     get COIN(){return COIN},get DEMO(){return DEMO},get FAKE(){return FAKE},get CA(){return CA},get mcOK(){return mcOK},get mcScale(){return mcScale},
     get act(){return act},get hasData(){return hasData()},get target(){return target}}`;
   const o = new Function(...names, js + exp)(...names.map(n => g[n]));
   let now = 0;
   o.run = (n, each) => { for (let i = 0; i < n; i++) { now += 33; o.frame(now); if (each) each(i); } };
-  o.fetched = fetched; o.doc = doc;
+  o.fetched = fetched; o.spoken = spoken; o.doc = doc;
   return o;
 }
 
@@ -223,6 +223,48 @@ let passed = 0; const t = async (name, fn) => { try { await fn(); passed++; cons
     const lc = run({ CA_key: MINT }, 'lc'); assert.strictEqual(lc.status, 0, lc.stderr); assert(fs.readFileSync(path.join(tmp, 'lc', 'config.js'), 'utf8').includes("ca: '" + MINT + "'"), 'CA_key (different capitalisation) not picked up');
     assert.notStrictEqual(run({ CA_KEY: 'not a real address!' }, 'c').status, 0, 'invalid CA_KEY must fail the build');
     fs.rmSync(tmp, { recursive: true, force: true });
+  });
+
+
+  console.log('room upgrades, aura, voice');
+  const calm = js => js.replace('sc=(rawRate()-5)/8,pm=mode;', 'sc=0,pm=mode;');
+  const onNames = o => o.PROPS.filter(p => p.on).map(p => p.name);
+  await t('room upgrades appear as market cap rises, leave on a dump (with hysteresis), and animate in/out', async () => {
+    const o = boot({ cfg: { demo: true }, patch: calm });
+    o.setRoom(0); o.run(90);
+    assert.deepStrictEqual(onNames(o), ['ramen & pizza box']);
+    o.setRoom(120000); o.run(120);
+    const on = onNames(o); ['trophy shelf', 'gold chain', 'car poster', 'sunglasses', 'more trophies'].forEach(n => assert(on.includes(n), 'missing ' + n));
+    assert(!on.includes('ramen & pizza box') && !on.includes('gold bars') && !on.includes('crown'));
+    o.PROPS.forEach(p => assert(p.on ? p.s > .95 : p.s < .05, p.name + ' scale ' + p.s));
+    o.setRoom(90000); o.run(30); assert(onNames(o).includes('more trophies'), 'should not drop out until 15% below its level');
+    o.setRoom(80000); o.run(30); assert(!onNames(o).includes('more trophies') && onNames(o).includes('gold chain'));
+    o.setRoom(2e6); o.run(60); ['gold bars', 'disco ball', 'crown', 'gold chair trim'].forEach(n => assert(onNames(o).includes(n), 'missing ' + n)); assert(!onNames(o).includes('golden rug ring'));
+    o.setRoom(6e6); o.run(60); assert(onNames(o).includes('golden rug ring'));
+    o.setRoom(0); o.run(120); assert.deepStrictEqual(onNames(o), ['ramen & pizza box'], 'full downgrade');
+  });
+  await t('room upgrades can be switched off (roomUpgrades:false)', async () => {
+    const o = boot({ cfg: { demo: true, roomUpgrades: false } }); assert.strictEqual(o.PROPS.length, 0); o.run(30);
+  });
+  await t('aura: rises with momentum, falls on dumps, +150 per room upgrade, +500 per milestone', async () => {
+    const up = boot({ cfg: { demo: true }, patch: js => js.replace('sc=(rawRate()-5)/8,pm=mode;', 'sc=2,pm=mode;') }); up.run(300);
+    assert(up.aura > 250 && up.aura < 700, 'aura after ~10s of pumping: ' + up.aura);
+    const dn = boot({ cfg: { demo: true }, patch: js => js.replace('sc=(rawRate()-5)/8,pm=mode;', 'sc=-.5,pm=mode;') }); dn.run(300); assert(dn.aura < 0, 'aura after dumping: ' + dn.aura);
+    const o = boot({ cfg: { demo: true }, patch: calm }); o.setRoom(0); o.run(30); assert.strictEqual(o.aura, 0);
+    o.setRoom(30000); o.run(30); assert.strictEqual(Math.round(o.aura), 150, 'one upgrade (trophy shelf)');
+    o.setRoom(300000); o.run(30); assert.strictEqual(Math.round(o.aura), 150 + 5 * 150, '5 more upgrades');
+    o.queue.push({ act: 'dance', mc: 15000, label: ['x'] }); o.run(20); assert(o.aura >= 150 + 750 + 500 - 1, 'milestone +500: ' + o.aura);
+  });
+  await t('voice: speaks only when Sound is on, strips emoji, throttles chatter, priority lines cut in', async () => {
+    const o = boot({ cfg: { demo: true } });
+    o.say('Hello'); assert.strictEqual(o.spoken.length, 0, 'must stay silent while Sound is off');
+    o.setSound(true); o.say('LET HIM COOK 🔥🔥', true); assert.deepStrictEqual(o.spoken, ['LET HIM COOK']);
+    o.say('chatter'); assert.strictEqual(o.spoken.length, 1, 'non-priority line within 7s must be dropped');
+    o.say('Milestone!', true); assert.strictEqual(o.spoken.length, 2);
+    const off = boot({ cfg: { demo: true, voice: false } }); off.setSound(true); off.say('x', true); assert.strictEqual(off.spoken.length, 0, 'voice:false');
+  });
+  await t('sound effects never throw (including with no audio support)', async () => {
+    const o = boot({ cfg: { demo: true } }); o.setSound(true); ['punch', 'thud', 'crush', 'levelup', 'sad', 'ching', 'aura', 'nope'].forEach(n => o.sfx(n));
   });
 
   console.log('airdrop parser');
