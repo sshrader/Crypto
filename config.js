@@ -93,6 +93,22 @@ window.TRADER_CONFIG = {
   despairAfterSeconds: 5,
   despairMaxSeconds: 10,
 
+  /* ---------- 4d. EXTRAS ------------------------------------------------
+     roomUpgrades  the room fills up as the market cap climbs (trophies at
+                   25K, gold chain 50K, car poster + shades 100K, gold bars
+                   250K, disco ball 500K, crown + gold chair 1M, gold rug 5M)
+                   and things disappear again if it dumps. false = off.
+     aura          the AURA score card (a vibes meter, NOT market data).
+     voice         the trader talks (browser speech synthesis). Needs the
+                   Sound button switched on. voiceName: part of a voice name
+                   to prefer, e.g. 'Daniel' ('' = pick an English male voice).
+     sfx           synthesized punch / crush / level-up / sad / cash sounds.  */
+  roomUpgrades: true,
+  aura: true,
+  voice: true,
+  voiceName: '',
+  sfx: true,
+
   /* ---------- 5. SOUNDS ------------------------------------------------
      niceSound  the "nice" clip (path or URL). Visitors must click the
                 Sound button once before any audio can play.            */

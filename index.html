@@ -11,6 +11,7 @@ canvas#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-actio
 .hud{position:fixed;left:12px;right:12px;pointer-events:none}
 .top{top:calc(env(safe-area-inset-top,0px) + 10px);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
 .card{background:var(--card);border-radius:12px;padding:10px 14px;pointer-events:auto}
+.col{display:flex;flex-direction:column;gap:8px;min-width:150px}#auraBar{height:6px;border-radius:4px;background:rgba(255,255,255,.12);margin-top:6px;overflow:hidden}#auraFill{height:100%;width:50%;background:linear-gradient(90deg,#ff4d6d,#ffd24a,#2ee59d);transition:width .4s}.card.ap{box-shadow:0 0 0 2px #2ee59d}.card.an{box-shadow:0 0 0 2px #ff4d6d}
 .price{font-size:26px;font-weight:700}.small{font-size:12px;opacity:.7}
 .bot{bottom:calc(env(safe-area-inset-bottom,0px) + 12px);display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
 button{pointer-events:auto;border:0;border-radius:10px;padding:12px 18px;font-size:15px;font-weight:700;color:#06060c;cursor:pointer}
@@ -39,12 +40,13 @@ button{pointer-events:auto;border:0;border-radius:10px;padding:12px 18px;font-si
   <div id="ca" title="Double-click to copy"></div>
   <div class="small" style="margin-top:8px"><span id="mclabel">MARKET CAP</span> <span id="src"></span> <a id="dxl" target="_blank" rel="noopener" style="display:none;color:#8bb4ff;text-decoration:none">DexScreener ↗</a></div><div class="price" id="price">$0</div><div id="chg">0%</div>
  </div>
- <div class="card"><div class="small">Trader mood</div><div class="price" id="mood" style="font-size:16px">…</div></div>
+ <div class="col"><div class="card"><div class="small">Trader mood</div><div class="price" id="mood" style="font-size:16px">…</div></div>
+ <div class="card" id="auraCard"><div class="small">AURA · <span id="auraTier">Side character</span></div><div class="price" id="aura" style="font-size:22px">+0</div><div id="auraBar"><div id="auraFill"></div></div></div></div>
 </div>
 <div id="toast"></div>
 <div id="air"><span id="airT"></span> <a id="airL" target="_blank" rel="noopener">view tx ↗</a></div>
 <div class="hud bot">
- <button id="pump">🚀 PUMP</button><button id="dump">📉 DUMP</button><button id="melt" style="background:#7aa2ff">😭 Meltdown</button><button id="sim" style="background:#ffd24a">🪂 Sim airdrop</button><button id="mile" style="background:#ff9f1c">🎯 Next milestone</button><button id="auto">Auto: ON</button><button id="snd" style="background:#ffd166">🔊 Sound: OFF</button>
+ <button id="pump">🚀 PUMP</button><button id="dump">📉 DUMP</button><button id="melt" style="background:#7aa2ff">😭 Meltdown</button><button id="roomUp" style="background:#b78bff">🏠 Room ⬆</button><button id="roomDn" style="background:#b78bff">🏚️ Room ⬇</button><button id="sim" style="background:#ffd24a">🪂 Sim airdrop</button><button id="mile" style="background:#ff9f1c">🎯 Next milestone</button><button id="auto">Auto: ON</button><button id="snd" style="background:#ffd166">🔊 Sound: OFF</button>
 </div>
 <script src="vendor/three.min.js"></script>
 <script>window.THREE||document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>')</script>
@@ -425,9 +427,10 @@ function drawScreen3(){const g=ctx3,w=280,h=460;g.fillStyle='#07070d';g.fillRect
   g.fillStyle='#e8e8f5';g.font='13px monospace';wrapT(g,t.t,252).slice(0,2).forEach((ln,j)=>g.fillText(ln,14,y+17+j*16));
   g.fillStyle='#777';g.font='11px monospace';g.fillText('♥ '+t.l+'   ↻ '+t.r,14,y+55)});
  tex3.needsUpdate=true}
-function smashCan(c){c.fly=true;c.crushed=true;c.m.scale.set(1.2,.5,1.2);c.v.set((Math.random()-.4)*1.6,2.2+Math.random(),.7+Math.random()*.9);c.w.set(Math.random()*12-6,Math.random()*12-6,Math.random()*12-6)}
+function smashCan(c){sfx('crush');c.fly=true;c.crushed=true;c.m.scale.set(1.2,.5,1.2);c.v.set((Math.random()-.4)*1.6,2.2+Math.random(),.7+Math.random()*.9);c.w.set(Math.random()*12-6,Math.random()*12-6,Math.random()*12-6)}
 function startAct(M){const c=cans[0];if(c&&(c.crushed||c.fly)){c.m.position.copy(c.rest);c.m.rotation.copy(c.rot);c.m.scale.set(1,1,1);c.fly=false;c.crushed=false}
  drinkOn=false;mouseUse=0;act={name:M.act,t:0,dur:DUR[M.act]||4,thrown:false,pressed:false,info:M.info};mode=3;toast((Array.isArray(M.label)?pick(M.label):M.label)+(M.mc?'  ·  '+fmtMC(M.mc):''));
+ if(M.mc){sfx('levelup');addAura(500);say(Array.isArray(M.label)?M.label[0]:M.label,true)}
  if(M.sound&&soundOn){try{new Audio(M.sound).play().catch(()=>{})}catch(e){}}}
 function updateCans(dt){cans.forEach(c=>{if(!c.fly)return;const m=c.m;c.v.y-=9.8*dt;m.position.addScaledVector(c.v,dt);
  m.rotation.x+=c.w.x*dt;m.rotation.y+=c.w.y*dt;m.rotation.z+=c.w.z*dt;
@@ -461,8 +464,9 @@ function hud(){
  const r=rate(); 
  $('mood').textContent=mode===3&&act?(act.name==='distribute'?'🪂 AIRDROP TIME':'🎯 MILESTONE — '+act.name.toUpperCase()):mode===4&&DS?(DS.kind==='bed'?'😭 SOBBING ON THE BED':'😩 PACING THE ROOM — DOWN BAD'):mode===1?'🤬 RAGE — SMASHING THE DESK':mode===2?'🥳 CELEBRATING — LFG!!!':r>14?'🔥 FRENZY — "TO THE MOON"':r>8?'😎 Locked in':r>4?'😐 Watching…':r>1.5?'😟 Sweating…':'💀 Hands frozen';
 }
-$('pump').onclick=()=>{bias=.012;biasT=20};$('dump').onclick=()=>{bias=-.012;biasT=20};$('melt').onclick=()=>{if(mode!==3&&mode!==4){meltK=meltK==='bed'?'pace':'bed';startDespair(meltK)}};
-$('snd').onclick=e=>{soundOn=!soundOn;e.target.textContent='🔊 Sound: '+(soundOn?'ON':'OFF');if(soundOn){lastNice=0;nice()}};
+$('pump').onclick=()=>{bias=.012;biasT=20};$('dump').onclick=()=>{bias=-.012;biasT=20};$('roomUp').onclick=()=>{const m=roomMC(),n=ROOM_STEPS.find(s=>s>m);roomForce=n==null?m:n;toast('Room test at '+fmtMC(roomForce))};$('roomDn').onclick=()=>{const m=roomMC(),p=[...ROOM_STEPS].reverse().find(s=>s<m);roomForce=p==null?0:p;toast('Room test at '+fmtMC(roomForce))};
+$('melt').onclick=()=>{if(mode!==3&&mode!==4){meltK=meltK==='bed'?'pace':'bed';startDespair(meltK)}};
+$('snd').onclick=e=>{soundOn=!soundOn;e.target.textContent='🔊 Sound: '+(soundOn?'ON':'OFF');if(soundOn){try{const a=ac();a&&a.resume&&a.resume()}catch(e){}sfx('aura');lastNice=0;nice()}};
 $('sim').onclick=()=>{const b58='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz',rw=()=>Array.from({length:44},()=>b58[Math.random()*58|0]).join('');
  const to=Array.from({length:1+(Math.random()*4|0)},()=>({w:rw(),a:1000+Math.random()*40000}));
  queue.push({act:'distribute',label:'🪂 DISTRIBUTING AIRDROP…',info:{sig:'',total:to.reduce((t,x)=>t+x.a,0),to}})};
@@ -500,7 +504,7 @@ async function poll(){
 }
 if(CA_OK){poll();setInterval(poll,POLL_MS)}
 if(DEV_OK&&CA_OK){pollDev();setInterval(pollDev,DEV_MS)}
-if(!DEMO)['pump','dump','melt','auto','mile','sim'].forEach(i=>{$(i).style.display='none'});
+if(!DEMO)['pump','dump','melt','roomUp','roomDn','auto','mile','sim'].forEach(i=>{$(i).style.display='none'});
 // orbit
 let az=.7,el=.35,dist=5.2,drag=null;
 cv.addEventListener('pointerdown',e=>{drag=[e.clientX,e.clientY];cv.setPointerCapture(e.pointerId)});
@@ -559,7 +563,7 @@ function startDespair(kind){
   ?[['stand'],['walk',[[1.9,1.55],[4,1.55]]],['turn',Math.PI],['sit'],['lie'],['cry'],['rise'],['unsit'],['walk',[[1.9,1.55],[.9,1.55],[.62,1.3]]],['turn',0],['seat']]
   :[['stand'],['walk',[[1.1,2.0],[2.3,2.3]]],['pace'],['walk',[[1.1,2.0],[.62,1.3]]],['turn',0],['seat']];
  DS={kind,plan,i:0,st:0,tot:0,leave:false,x:0,z:1.2,yaw:0,sp:0,gp:0,wp:0,sub:0,pause:0,mv:false};
- drinkOn=false;mouseUse=0;act=null;mode=4;toast(pick(kind==='bed'?CRY_MSG:PACE_MSG))}
+ drinkOn=false;mouseUse=0;act=null;mode=4;toast(pick(kind==='bed'?CRY_MSG:PACE_MSG));sfx('sad');addAura(-400);say(pick(kind==='bed'?BED_LINES:PACE_LINES),true)}
 function endDespair(){DS=null;PP.x=0;PP.y=.55;PP.z=1.2;PP.rx=-.12;PP.ry=0;PP.rz=0;up.position.set(0,.55,1.2);up.rotation.set(-.12,0,0)}
 function despairStep(dt,sc){const w=DS;w.st+=dt;w.tot+=dt;
  if(!w.leave&&((sc>-.15&&w.tot>9)||sc>.6||w.tot>DESPAIR_MAX))w.leave=true;
@@ -567,6 +571,7 @@ function despairStep(dt,sc){const w=DS;w.st+=dt;w.tot+=dt;
  if(T==='walk'){const p=s[1][w.wp];if(go(w,p[0],p[1],1.15,dt)){w.wp++;if(w.wp>=s[1].length)nx=true}}
  else if(T==='turn'){const e=angd(s[1],w.yaw);w.yaw+=Math.max(-dt*5,Math.min(dt*5,e));if(Math.abs(e)<.05){w.yaw=s[1];nx=true}}
  else if(T==='pace'){if(w.pause>0)w.pause-=dt;else if(go(w,w.sub?-2.3:2.3,2.3,1.05,dt)){if(w.leave)nx=true;else{w.sub^=1;w.pause=.7}}}
+ w.say=(w.say==null?7:w.say)-dt;if(w.say<0&&(T==='cry'||T==='pace')){w.say=9+Math.random()*5;say(pick(T==='cry'?BED_LINES:PACE_LINES))}
  w.sp+=((w.mv?1:0)-w.sp)*Math.min(1,dt*6);w.gp+=dt*6.3*w.sp;
  const sobF=()=>sad(.32+Math.sin(tt*16)*.05,Math.sin(tt*13)*.05,4,-.03,-.5);
  if(T==='walk'||T==='turn'||T==='pace'){standPose(w);gait(w);
@@ -584,6 +589,91 @@ function despairStep(dt,sc){const w=DS;w.st+=dt;w.tot+=dt;
  for(let i=0;i<2;i++)handT[i].set(HP[i].x,HP[i].y,HP[i].z);
  if(nx){w.i++;w.st=0;w.wp=0;if(w.plan[w.i]&&w.plan[w.i][0]==='pace'){w.sub=1;w.pause=0}if(w.i>=w.plan.length)return false}
  return true}
+// ===== SOUND: synthesized effects (WebAudio, no files) + the trader's voice (speech synthesis) =====
+const SFX_ON=cfg.sfx!==false,VOICE_ON=cfg.voice!==false;let AC=null,lastSay=-99;
+function ac(){if(AC)return AC;const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;try{AC=new C()}catch(e){}return AC}
+function tone(f,d,type,v,f2,delay){const a=ac();if(!a||!soundOn||!SFX_ON)return;const t=a.currentTime+(delay||0),o=a.createOscillator(),g=a.createGain();
+ o.type=type||'sine';o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);
+ g.gain.setValueAtTime(v||.15,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+d+.02)}
+function noise(d,v,hp){const a=ac();if(!a||!soundOn||!SFX_ON)return;const n=Math.floor(a.sampleRate*d),b=a.createBuffer(1,n,a.sampleRate),x=b.getChannelData(0);
+ for(let i=0;i<n;i++)x[i]=(Math.random()*2-1)*(1-i/n);const s=a.createBufferSource(),g=a.createGain(),f=a.createBiquadFilter();
+ s.buffer=b;f.type='highpass';f.frequency.value=hp||500;g.gain.value=v;s.connect(f);f.connect(g);g.connect(a.destination);s.start()}
+const SFX={
+ punch(){tone(140,.18,'sine',.35,45);noise(.08,.2,200)},
+ thud(){tone(110,.12,'sine',.22,60)},
+ crush(){noise(.22,.3,1500);tone(900,.1,'square',.08,300)},
+ levelup(){[523,659,784,1047].forEach((f,i)=>tone(f,.14,'square',.1,0,i*.08))},
+ sad(){[392,370,349,294].forEach((f,i)=>tone(f,.4,'sawtooth',.08,f*.96,i*.35))},
+ ching(){tone(1568,.25,'triangle',.15);tone(2093,.35,'triangle',.12,0,.08)},
+ aura(){tone(880,.08,'sine',.08)}};
+function sfx(n){try{SFX[n]&&SFX[n]()}catch(e){}}
+const RAGE_LINES=['Bro. Bro. Bro.','Who is selling?!','Not like this.','I am so cooked.','Why is it always me?'],
+ PARTY_LINES=["Let's go!","We're so back.",'Sheesh.','Big W.','I called it!'],
+ BED_LINES=['I should have sold.','Tell my mom I love her.','It is so over.'],
+ PACE_LINES=['Breathe. Just breathe.','Why did I ape in?','It is fine. It is fine. It is not fine.'];
+function say(text,prio){try{const ss=window.speechSynthesis||(typeof speechSynthesis!=='undefined'?speechSynthesis:null);
+ if(!VOICE_ON||!soundOn||!ss||!text)return;if(!prio&&tt-lastSay<7)return;lastSay=tt;
+ const u=new SpeechSynthesisUtterance(String(text).replace(/[^\w\s'!?,.$%+-]/g,' ').replace(/\s+/g,' ').trim());
+ u.rate=1.08;u.pitch=.85;u.volume=1;
+ if(typeof ss.getVoices==='function'){const vs=ss.getVoices()||[],want=String(cfg.voiceName||'').toLowerCase();
+  const v=(want&&vs.find(x=>x.name.toLowerCase().includes(want)))||vs.find(x=>/^en/i.test(x.lang)&&/daniel|alex|david|fred|male|guy|mark/i.test(x.name))||vs.find(x=>/^en/i.test(x.lang));if(v)u.voice=v}
+ if(prio&&ss.cancel)ss.cancel();ss.speak(u)}catch(e){}}
+// ===== AURA: a vibes score (not market data). Rises on pumps and milestones, falls on dumps and meltdowns =====
+const AURA_ON=cfg.aura!==false,AURA_TIERS=[[-1e9,'NEGATIVE AURA 💀'],[-300,'NPC 🤖'],[200,'Side character'],[1500,'Main character ✨'],[4000,'Sigma 🐺'],[9000,'Aura farmer 👑']];
+let aura=0,auraT=0,auraFlash=0;
+function addAura(n){if(!AURA_ON)return;aura+=n;auraFlash=n>0?.7:-.7}
+function auraUpdate(dt,sc){if(hasData()||DEMO)aura+=dt*Math.max(-2,Math.min(2,sc))*22;aura=Math.max(-9999,Math.min(99999,aura));
+ if(auraFlash!==0){auraFlash+=auraFlash>0?-dt:dt;const c=$('auraCard');if(Math.abs(auraFlash)<=dt){auraFlash=0;if(c)c.className='card'}else if(c)c.className='card '+(auraFlash>0?'ap':'an')}
+ auraT-=dt;if(auraT>0)return;auraT=.25;
+ const t=AURA_TIERS.reduce((r,x)=>aura>=x[0]?x:r,AURA_TIERS[0]);
+ $('aura').textContent=(aura>=0?'+':'')+Math.round(aura).toLocaleString();$('auraTier').textContent=t[1];$('auraFill').style.width=(50+50*Math.tanh(aura/4000)).toFixed(1)+'%'}
+// ===== ROOM UPGRADES: things appear as market cap climbs (and leave if it falls) =====
+const ROOM_UP=cfg.roomUpgrades!==false,PROPS=[],gold=M(0xffc83d,{metalness:.85,roughness:.28,emissive:0x5a3a00,emissiveIntensity:.35});
+const ROOM_STEPS=[0,25000,50000,100000,250000,500000,1000000,5000000];
+function prop(mc,maxMc,name,build,at,par,opt){const g=new THREE.Group();if(at)g.position.set(...at);(par||S).add(g);build(g);g.scale.setScalar(.001);g.visible=false;
+ const p=Object.assign({g,mc,maxMc:maxMc||0,name,s:0,on:false},opt||{});PROPS.push(p);return p}
+function trophy(g,x,y){box(.1,.03,.1,M(0x2a1a10),[x,y+.04,0],g);const st=new THREE.Mesh(new THREE.CylinderGeometry(.012,.012,.08,8),gold);st.position.set(x,y+.1,0);g.add(st);
+ const cp=new THREE.Mesh(new THREE.CylinderGeometry(.07,.035,.13,16),gold);cp.position.set(x,y+.2,0);g.add(cp)}
+if(ROOM_UP){
+ prop(0,50000,'ramen & pizza box',g=>{ // the broke era
+  const cup=new THREE.Mesh(new THREE.CylinderGeometry(.065,.047,.11,16),M(0xf2f2f2));cup.position.set(-1.55,.055,.55);g.add(cup);
+  const band=new THREE.Mesh(new THREE.CylinderGeometry(.0655,.0575,.035,16),M(0xd33a2c));band.position.set(-1.55,.06,.55);g.add(band);
+  box(.01,.01,.17,M(0xc9a36a),[-1.52,.13,.55],g).rotation.x=.5;box(.01,.01,.17,M(0xc9a36a),[-1.56,.13,.55],g).rotation.x=.45;
+  const pz=box(.34,.04,.34,M(0xb98a55),[-1.95,.02,.38],g);pz.rotation.y=.3},[0,.9,0]);
+ prop(25000,0,'trophy shelf',g=>{box(1.1,.05,.26,M(0x3a2a20),[0,0,0],g);[-.4,.4].forEach(x=>box(.04,.12,.2,M(0x222222),[x,-.08,-.02],g));trophy(g,0,.025)},[2.6,2.3,-1.46]);
+ prop(50000,0,'gold chain',g=>{const c=new THREE.Mesh(new THREE.TorusGeometry(1,.045,8,40),gold);c.rotation.x=Math.PI/2;c.scale.set(.345,.215,.22);c.position.set(0,.72,0);g.add(c);
+  sph(.035,gold,[0,.55,-.2],g)},null,up);
+ prop(100000,0,'car poster',g=>{g.rotation.y=Math.PI/2;
+  const cv=document.createElement('canvas');cv.width=280;cv.height=200;const k=cv.getContext('2d'),gr=k.createLinearGradient(0,0,0,200);gr.addColorStop(0,'#1a0838');gr.addColorStop(.6,'#ff5fa2');gr.addColorStop(1,'#ffb347');k.fillStyle=gr;k.fillRect(0,0,280,200);
+  k.fillStyle='#ffe27a';k.beginPath();k.arc(140,118,40,0,7);k.fill();k.fillStyle='#120826';k.fillRect(0,150,280,50);
+  k.fillStyle='#ffd24a';k.beginPath();k.moveTo(34,140);k.lineTo(46,122);k.lineTo(112,110);k.lineTo(150,92);k.lineTo(206,110);k.lineTo(250,120);k.lineTo(258,140);k.closePath();k.fill();
+  k.fillStyle='#1b0f33';k.beginPath();k.moveTo(118,108);k.lineTo(150,95);k.lineTo(192,108);k.closePath();k.fill();
+  [[84,142],[214,142]].forEach(w=>{k.fillStyle='#000';k.beginPath();k.arc(w[0],w[1],17,0,7);k.fill();k.fillStyle='#888';k.beginPath();k.arc(w[0],w[1],8,0,7);k.fill()});
+  k.fillStyle='#fff';k.font='bold 26px sans-serif';k.textAlign='center';k.fillText('LAMBO SOON',140,184);
+  box(1.5,1.1,.03,M(0x08040f),[0,0,0],g);const m=new THREE.Mesh(new THREE.PlaneGeometry(1.4,1.0),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(cv)}));m.position.z=.02;g.add(m)},[-4.97,2.3,-.8]);
+ prop(100000,0,'sunglasses',g=>{const dk=M(0x050505,{roughness:.2,metalness:.5});[-1,1].forEach(s=>{box(.085,.05,.02,dk,[s*.058,.03,-.152],g);box(.01,.012,.12,dk,[s*.11,.04,-.09],g)});box(.04,.012,.02,dk,[0,.04,-.152],g)},null,head,{hideMelt:true});
+ prop(100000,0,'more trophies',g=>{box(1.1,.05,.26,M(0x3a2a20),[0,0,0],g);[-.4,.4].forEach(x=>box(.04,.12,.2,M(0x222222),[x,-.08,-.02],g));trophy(g,-.3,.025);trophy(g,.3,.025)},[2.6,2.85,-1.46]);
+ prop(250000,0,'gold bars',g=>{[[-.09,0],[.09,0],[0,.055]].forEach(p=>box(.16,.05,.08,gold,[p[0],p[1]+.025,0],g));box(.1,.06,.2,M(0x2e8b57),[.3,.03,.02],g)},[1.85,.9,.55]);
+ let disco=null;disco=prop(500000,0,'disco ball',g=>{const bl=new THREE.Mesh(new THREE.IcosahedronGeometry(.28,1),M(0xdddddd,{metalness:1,roughness:.1,flatShading:true,emissive:0x222233}));g.add(bl);
+  const st=new THREE.Mesh(new THREE.CylinderGeometry(.006,.006,.6,6),M(0x888888));st.position.y=.45;g.add(st);
+  const pl=new THREE.PointLight(0xff2bd6,.9,7);g.add(pl);g.userData={bl,pl}},[0,3.85,2.0],null,{upd(p,dt){p.g.userData.bl.rotation.y+=dt*1.2;p.g.userData.pl.color.setHSL((tt*.15)%1,1,.55)}});
+ prop(1000000,0,'crown',g=>{const cr=new THREE.Mesh(new THREE.CylinderGeometry(.115,.12,.05,24,1,true),M(0xffc83d,{metalness:.85,roughness:.25,emissive:0x5a3a00,emissiveIntensity:.4,side:THREE.DoubleSide}));cr.position.y=.02;g.add(cr);
+  for(let i=0;i<6;i++){const a=i/6*Math.PI*2,sp=new THREE.Mesh(new THREE.ConeGeometry(.026,.07,8),gold);sp.position.set(Math.cos(a)*.117,.08,Math.sin(a)*.117);g.add(sp);sph(.012,M(0xff3355,{emissive:0xff1133,emissiveIntensity:.8}),[Math.cos(a)*.117,.12,Math.sin(a)*.117],g)}},[0,.2,.03],head);
+ prop(1000000,0,'gold chair trim',g=>{box(1.04,.05,.14,gold,[0,.66,.25],g);[-.5,.5].forEach(x=>box(.05,1.1,.14,gold,[x,.1,.25],g));box(1.04,.05,.04,gold,[0,-.47,-.75],g)},[0,1.0,1.5]);
+ prop(5000000,0,'golden rug ring',g=>{const r=new THREE.Mesh(new THREE.TorusGeometry(1.72,.03,8,64),gold);r.rotation.x=Math.PI/2;g.add(r)},[0,.035,1.1]);
+}
+let roomForce=null,roomInit=false;
+const roomMC=()=>roomForce!=null?roomForce:(hasData()&&mcOK?mc():0);
+function roomUpdate(dt){const m=roomMC(),ready=roomForce!=null||hasData()||DEMO;
+ PROPS.forEach(p=>{const want=p.maxMc?(p.on?m<p.maxMc:m<p.maxMc*.85):(p.on?m>=p.mc*.85:m>=p.mc);
+  if(want!==p.on){p.on=want;if(roomInit&&ready){
+   if(want&&!p.maxMc){toast('🏠 ROOM UPGRADE · '+p.name.toUpperCase());sfx('levelup');addAura(150);say('Room upgrade.',true)}
+   else if(!want&&!p.maxMc)toast('🏚️ LOST THE '+p.name.toUpperCase())}}
+  if(!roomInit&&ready)p.s=p.on?1:0;
+  const tgt=p.on&&!(p.hideMelt&&mode===4)?1:0;p.s+=(tgt-p.s)*Math.min(1,dt*5);
+  p.g.scale.setScalar(Math.max(.001,p.s));p.g.visible=p.s>.02;if(p.upd&&p.g.visible)p.upd(p,dt)});
+ if(ready)roomInit=true}
+if(!AURA_ON){const c=$('auraCard');if(c)c.style.display='none'}
 function frame(now){
  requestAnimationFrame(frame);
  const dt=Math.min(.05,(now-last)/1000);last=now;tt+=dt;tc+=dt;
@@ -596,7 +686,7 @@ function frame(now){
  if(mode===1){rageT+=dt;if(DESPAIR_ON&&despCool<=0&&rageT>DESPAIR_AFTER&&sc<-.5)startDespair()}else rageT=0;
  despCool-=dt;
  if(mode===4&&DS){if(!despairStep(dt,sc)){endDespair();mode=0;despCool=25;rageT=0}}else if(DS)endDespair();else if(mode===4)mode=0;
- if(mode!==pm){hud();drawScreen();drawScreen2();drawScreen3();if(mode===2&&Math.random()<.5)nice();if(mode===2)toast(pick(PUMP));if(mode===1)toast(pick(DUMP))}
+ if(mode!==pm){hud();drawScreen();drawScreen2();drawScreen3();if(mode===2&&Math.random()<.5)nice();if(mode===2)toast(pick(PUMP));if(mode===1)toast(pick(DUMP));if(mode===2){addAura(120);say(pick(PARTY_LINES))}if(mode===1){addAura(-120);say(pick(RAGE_LINES))}}
  // mouse
  mouseWait-=dt;mouseUse-=dt;
  if(mode!==0)mouseUse=0;else if(mouseWait<0&&!drinkOn){mouseUse=1.2+Math.random()*1.5;mouseWait=3+Math.random()*5}
@@ -626,9 +716,9 @@ function frame(now){
   if(p<.55)handT[pHand].set(sd*.45,1.85,up.position.z-.4);
   else{ if(pTarget==='mon')handT[pHand].set(pX,1.6,-.08);else if(pTarget==='can')handT[pHand].set(pCan.rest.x,pCan.rest.y+.05,pCan.rest.z);else handT[pHand].set(pX*.5,.98,pZ);
    if(!pHit){pHit=true;
-    if(pTarget==='mon'){shake=1;flash=1}
+    if(pTarget==='mon'){shake=1;flash=1;sfx('punch')}
     else if(pTarget==='can'){smashCan(pCan)}
-    else{shake=Math.max(shake,.25);keys.forEach(k=>{if(Math.abs(k.position.x-pX*.5)<.25&&Math.abs(k.position.z-pZ)<.2){k.position.y=.89;k.material.color.set(0xff4d6d)}})}}}
+    else{shake=Math.max(shake,.25);sfx('thud');keys.forEach(k=>{if(Math.abs(k.position.x-pX*.5)<.25&&Math.abs(k.position.z-pZ)<.2){k.position.y=.89;k.material.color.set(0xff4d6d)}})}}}
   handT[o].set(-sd*.4,1.25,up.position.z-.4);
  }
  // party
@@ -648,7 +738,7 @@ function frame(now){
    const bp=new V(BTN.x,.99,BTN.z),hv=new V(BTN.x,1.25,BTN.z);
    if(p<1.7){let tp;if(p<.7)tp=hv;else if(p<1)tp=hv.clone().lerp(bp,e((p-.7)/.3));else if(p<1.3)tp=bp;else tp=bp.clone().lerp(hv,e((p-1.3)/.4));
     handT[1].copy(tp);handT[0].set(-.3,.98,.55);
-    if(p>=1&&!act.pressed){act.pressed=true;if(act.info)showAirdrop(act.info)}
+    if(p>=1&&!act.pressed){act.pressed=true;sfx('ching');addAura(250);say('Distributing. You are welcome.',true);if(act.info)showAirdrop(act.info)}
     A={tx:-.2,ty:.55,rz:0,ry:-.3,hz:0,hx:-.15,my:1.5,lid:.02,br:0}}
    else{arms(1.0,.4,7,.65);A={tx:.1,ty:.55+Math.abs(sn(tt*7))*.1,rz:0,ry:0,hz:sn(tt*8)*.12,hx:.2,my:4,lid:.03,br:-.12}}}
   else if(n==='chug'){
@@ -690,6 +780,7 @@ function frame(now){
  signF=Math.max(0,signF-dt);
  const sb=(signF>0?(Math.sin(tt*70)>0?.35:1):1)*(.94+.06*Math.sin(tt*2.2));
  signMat.color.setRGB(sb,sb,sb);haloMat.opacity=sb;signLight.intensity=1.3*sb;
+ if(ROOM_UP)roomUpdate(dt);if(AURA_ON)auraUpdate(dt,sc);
  updateCans(dt);calmT=mode===0?calmT+dt:0;
  if(calmT>8&&!drinkOn&&cans.some(c=>c.crushed))cans.forEach(c=>{c.m.position.copy(c.rest);c.m.rotation.copy(c.rot);c.m.scale.set(1,1,1);c.fly=false;c.crushed=false});
  // confetti
