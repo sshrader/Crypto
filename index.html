@@ -174,6 +174,15 @@ rmPoster(240,320,(g,w,h)=>{g.fillStyle='#08130a';g.fillRect(0,0,w,h);g.textAlign
 rmPoster(320,240,(g,w,h)=>{g.fillStyle='#120a24';g.fillRect(0,0,w,h);g.textAlign='center';
  g.font='bold 72px sans-serif';g.shadowColor='#ff2bd6';g.shadowBlur=22;g.strokeStyle='#ff2bd6';g.lineWidth=5;g.strokeText('WAGMI',w/2,112);g.shadowBlur=0;
  g.fillStyle='#7df9ff';g.font='bold 15px sans-serif';g.fillText('WE ARE ALL GONNA MAKE IT',w/2,190)},[-4.97,2.1,2.2],[0,Math.PI/2,0]);
+// easter egg: a small "coming soon" teaser poster on the back wall (text from config.comingSoon, '' hides it)
+const SOON=(window.TRADER_CONFIG&&window.TRADER_CONFIG.comingSoon!=null?String(window.TRADER_CONFIG.comingSoon):'Pawpad').trim().slice(0,14);
+if(SOON)rmPoster(190,130,(g,w,h)=>{g.fillStyle='#0d0720';g.fillRect(0,0,w,h);g.strokeStyle='#7df9ff';g.lineWidth=2;g.strokeRect(4,4,w-8,h-8);
+ const paw=(cx,cy,s)=>{g.fillStyle='#ff4fd8';g.shadowColor='#ff4fd8';g.shadowBlur=10;g.beginPath();g.ellipse(cx,cy+7*s,11*s,9*s,0,0,7);g.fill();
+  [[-13,-6,4.2,5.4,-.4],[-5,-14,4.2,5.6,-.1],[5,-14,4.2,5.6,.1],[13,-6,4.2,5.4,.4]].forEach(t=>{g.beginPath();g.ellipse(cx+t[0]*s,cy+t[1]*s+4*s,t[2]*s,t[3]*s,t[4],0,7);g.fill()});g.shadowBlur=0};
+ paw(w/2,36,1.15);
+ g.textAlign='center';g.fillStyle='#7df9ff';g.font='bold 11px sans-serif';g.shadowColor='#7df9ff';g.shadowBlur=6;g.fillText('C O M I N G   S O O N',w/2,76);
+ let fs=34;const fam='"Trebuchet MS",Verdana,sans-serif';g.font='800 '+fs+'px '+fam;const tw=g.measureText(SOON.toUpperCase()).width;if(tw>w-24){fs=Math.floor(fs*(w-24)/tw);g.font='800 '+fs+'px '+fam}
+ g.shadowColor='#ff4fd8';g.shadowBlur=12;g.fillStyle='#fff';g.fillText(SOON.toUpperCase(),w/2,112)},[2.6,1.5,-1.57]);
 const calC=document.createElement('canvas');calC.width=320;calC.height=420;const cx2=calC.getContext('2d'),ctex=new THREE.CanvasTexture(calC);
 box(1.36,1.78,.03,M(0xf2f2f2),[-3.3,2.55,-1.585]);
 const cal=new THREE.Mesh(new THREE.PlaneGeometry(1.3,1.71),new THREE.MeshBasicMaterial({map:ctex}));cal.position.set(-3.3,2.55,-1.568);S.add(cal);

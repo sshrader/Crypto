@@ -104,6 +104,7 @@ window.TRADER_CONFIG = {
                    to prefer, e.g. 'Daniel' ('' = pick an English male voice).
      sfx           synthesized punch / crush / level-up / sad / cash sounds.  */
   roomUpgrades: true,
+  comingSoon: 'Pawpad',   // text on the small "COMING SOON" teaser poster on the back wall. '' = no poster.
   aura: true,
   voice: true,
   voiceName: '',

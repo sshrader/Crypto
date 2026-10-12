@@ -125,6 +125,8 @@ shelf (100K), gold bars (250K), disco ball (500K), crown and gold chair trim (1M
 desk while it is below 50K. If the cap falls 15% below a level, that item goes away again. Needs a coin that has a market cap on DexScreener.
 In demo mode the **🏠 Room ⬆ / ⬇** buttons step through the tiers. `roomUpgrades: false` turns it off.
 
+**Easter egg:** a small neon "COMING SOON" poster with a paw print hangs on the back wall (default text "Pawpad"). Change or remove it with `comingSoon` in `config.js`.
+
 **Aura:** a vibes score under "Trader mood". It drifts up on pumps and down on dumps, jumps on milestones (+500), room upgrades (+150), airdrops
 and celebrations, and drops on rage (-120) and meltdowns (-400). It is not market data. `aura: false` hides it.
 
