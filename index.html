@@ -378,7 +378,10 @@ function tick(){
 function rawRate(){return 5+(mom*(live?9000:1500)+(live?m5*.6:0))*SENS}
 function rate(){return Math.max(.4,Math.min(22,rawRate()))}
 function fmt(p){return p>=1?p.toFixed(4):p>=.01?p.toFixed(5):p.toPrecision(4)}
-function chgPct(){const h=live&&stats&&stats.pc?parseFloat(stats.pc.h24):NaN;return Number.isFinite(h)?h:(price/start-1)*100}
+// % change over the last minute, measured from our own polls (DexScreener has no 1-minute figure)
+const pxLog=[];
+function logPx(px){const t=Date.now();pxLog.push({t,px});while(pxLog.length>2&&pxLog[1].t<=t-90000)pxLog.shift()}
+function chgPct(){if(!live)return (price/start-1)*100;if(pxLog.length<2)return 0;const now=pxLog[pxLog.length-1],cut=now.t-60000;let ref=pxLog[0];for(const e of pxLog){if(e.t<=cut)ref=e;else break}return ref.px>0?(now.px/ref.px-1)*100:0}
 function pushTrade(old){const n=1+(Math.random()*2|0);for(let i=0;i<n;i++)trades.unshift({b:Math.random()<(price>=old?.65:.35),a:Math.round(Math.pow(Math.random(),3)*90000+200),p:price});trades.length=Math.min(trades.length,22)}
 const usd=v=>v==null||isNaN(v)?'—':v>=1e9?'$'+(v/1e9).toFixed(2)+'B':v>=1e6?'$'+(v/1e6).toFixed(2)+'M':v>=1e3?'$'+(v/1e3).toFixed(1)+'K':'$'+Math.round(v);
 function drawStats(g,w){
@@ -457,7 +460,7 @@ function drawScreen(){
  const g=ctx,w=512,h=320,up=price>=hist[hist.length-8]; const col=up?'#2ee59d':'#ff4d6d';
  g.fillStyle='#07070d';g.fillRect(0,0,w,h);
  g.fillStyle='#fff';g.font='bold 22px monospace';g.fillText(sym.slice(0,10)+'  '+fmtMC(mc()),16,32);
- const pc=chgPct();g.fillStyle=pc>=0?'#2ee59d':'#ff4d6d';if(hasData())g.fillText((pc>=0?'▲ +':'▼ ')+pc.toFixed(1)+'%'+(live?' 24h':''),300,32);
+ const pc=chgPct();g.fillStyle=pc>=0?'#2ee59d':'#ff4d6d';if(hasData())g.fillText((pc>=0?'▲ +':'▼ ')+pc.toFixed(1)+'%'+(live?' 1m':''),300,32);
  if(!hasData()){g.fillStyle='#8b8bff';g.font='bold 22px monospace';g.textAlign='center';g.fillText(statusMsg?statusMsg.toUpperCase():'CONNECTING…',w/2,170);g.textAlign='left';g.fillStyle='#aaa';g.font='14px monospace';g.fillText('waiting for live market data',16,312);tex.needsUpdate=true;return}
  let mn=Math.min(...candles.map(c=>c.l)),mx=Math.max(...candles.map(c=>c.h));{const pad=Math.max(0,(price*.004-(mx-mn))/2);mn-=pad;mx+=pad}const rg=(mx-mn)||1,Y=v=>290-(v-mn)/rg*220;
  g.strokeStyle='#222';for(let i=1;i<5;i++){g.beginPath();g.moveTo(0,50+i*45);g.lineTo(w,50+i*45);g.stroke()}
@@ -476,7 +479,7 @@ function drawScreen(){
 function hud(){
  const p=chgPct(); $('price').textContent=fmtMC(mc());$('mclabel').textContent=hasData()&&!mcOK?'PRICE (USD)':'MARKET CAP';
  $('src').textContent=live?(statusMsg?'· '+statusMsg:'· LIVE'):DEMO?'· DEMO (simulated)':'· '+statusMsg;
- $('chg').textContent=hasData()?(p>=0?'+':'')+p.toFixed(1)+'%'+(live?' · 24h':''):'';$('chg').className=p>=0?'up':'down';
+ $('chg').textContent=hasData()?(p>=0?'+':'')+p.toFixed(1)+'%'+(live?' · 1m':''):'';$('chg').className=p>=0?'up':'down';
  const r=rate(); 
  $('mood').textContent=mode===3&&act?(act.name==='distribute'?'🪂 AIRDROP TIME':'🎯 MILESTONE — '+act.name.toUpperCase()):mode===4&&DS?(DS.kind==='bed'?'😭 SOBBING ON THE BED':'😩 PACING THE ROOM — DOWN BAD'):mode===1?'🤬 RAGE — SMASHING THE DESK':mode===2?'🥳 CELEBRATING — LFG!!!':r>14?'🔥 FRENZY — "TO THE MOON"':r>8?'😎 Locked in':r>4?'😐 Watching…':r>1.5?'😟 Sweating…':'💀 Hands frozen';
 }
@@ -516,7 +519,7 @@ async function poll(){
   if([COIN.name,COIN.symbol,COIN.logo,COIN.twitterUrl].join('|')!==uiKey)setCoinUI();
   if(DEMO){drawScreen2();drawScreen3();return}
   const mcv=p.marketCap||p.fdv;mcOK=mcv>0;mcScale=mcOK?mcv/px:1;
-  m5=+(p.priceChange||{}).m5||0;target=px;
+  m5=+(p.priceChange||{}).m5||0;target=px;logPx(px);
   if(!live){live=true;price=px;start=px;hist=hist.map(()=>px);seedCandles(px,true);MILES.forEach(m=>m.done=mc()>=m.mc);queue.length=0}
   statusMsg='';drawScreen2();drawScreen3();hud()
  }catch(e){fails++;statusMsg=live?(fails>=3?'reconnecting…':statusMsg):'feed error — retrying';hud()}
