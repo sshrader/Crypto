@@ -371,7 +371,6 @@ function buildLinks(){const el=$('links');if(!el)return;el.textContent='';
  const add=(t,href,cls,fn)=>{const a=document.createElement(href?'a':'button');a.className='pill'+(cls?' '+cls:'');a.textContent=t;if(href){a.href=href;a.target='_blank';a.rel='noopener noreferrer'}else a.onclick=fn;el.appendChild(a)};
  if(CA_OK){add('🟢 Buy',BUY_T.replace('{CA}',encodeURIComponent(COIN.ca)),'buy');add('📈 Chart','https://dexscreener.com/solana/'+encodeURIComponent(COIN.ca))}
  if(/^https:\/\//.test(COIN.twitterUrl||''))add('𝕏 Follow',COIN.twitterUrl);
- if(/^https:\/\/(t\.me|telegram\.me)\//.test(cfg.telegram||''))add('✈️ Telegram',cfg.telegram);
  if(COIN.ca)add('📋 Copy CA',null,'',copyCA)}
 const sh6=w=>w.slice(0,4)+'…'+w.slice(-4),fa=v=>v>=1e6?(v/1e6).toFixed(2)+'M':v>=1e3?(v/1e3).toFixed(1)+'K':Math.round(v).toString();
 function showAirdrop(ad){const n=ad.to.length,f=ad.to[0],who=sh6(f.w)+(n>1?' +'+(n-1)+' more':'');
