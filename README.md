@@ -85,16 +85,18 @@ Any of these is free and gives HTTPS (needed for the double-click-to-copy contra
 
 Custom domain: add it in the host's Domains settings and create the DNS records it shows.
 
-**Setting the coin from the host (`CA_KEY`)**
+**Setting the coin and dev wallet from the host (`CA_KEY`, `DEV_WALLET`)**
 
-A static page can't read host environment variables at runtime, so the address is written into `config.js` during the build
+A static page can't read host environment variables at runtime, so they are written into `config.js` during the build
 (`scripts/build.js`). `vercel.json` already sets the build command and output folder.
-- **Vercel (this repo):** Project → Settings → Environment Variables → add `CA_KEY` = the mint address (Production, and Preview if you want).
-  Then redeploy: Vercel only applies a changed variable to a *new* deployment (Deployments → ⋯ → Redeploy).
-- **Netlify / Cloudflare Pages:** add the same `CA_KEY` variable, build command `node scripts/build.js dist`, publish directory `dist`.
-- **GitHub Pages:** not used here (it has no environment variables unless you build with GitHub Actions).
-- If `CA_KEY` is empty or unset, the `ca:` in `config.js` is used. An invalid value fails the build instead of publishing a broken site.
-- Local test: `CA_KEY=<address> node scripts/build.js` writes the site to `dist/`.
+- **Vercel (this repo):** Project → Settings → Environment Variables → add `CA_KEY` = the token's mint address and, optionally,
+  `DEV_WALLET` = the dev wallet (Production, and Preview if you want). Then redeploy: Vercel only applies a changed variable to a
+  *new* deployment (Deployments → ⋯ → Redeploy). The build log prints which ones it used.
+- Names are matched ignoring capitalisation and underscores (`CA_key`, `dev_wallet` ... also work).
+- Both are public: they end up in `config.js`, which every visitor can read. Don't put secrets in them.
+- **Netlify / Cloudflare Pages:** add the same variables, build command `node scripts/build.js dist`, publish directory `dist`.
+- If a variable is empty or unset, the value in `config.js` is used. An invalid value fails the build instead of publishing a broken site.
+- Local test: `CA_KEY=<address> DEV_WALLET=<wallet> node scripts/build.js` writes the site to `dist/`.
 
 **Before you share the link publicly**
 1. `allowUrlOverrides: false` (the default). If it's `true`, anyone can craft `yoursite.com/?ca=SOMETHING_ELSE` and your page will
@@ -118,7 +120,7 @@ and a Solscan link. Wallets already in history when the page loads are ignored.
 ## 6. Settings reference (all in `config.js`, each commented there)
 
 `ca` · `name` `symbol` `twitter` `twitterUrl` `logo` `logoFromDexScreener` · `pollSeconds` `candleSeconds` `sensitivity` ·
-`devWallet` `rpc` `devPollSeconds` `ignoreWallets` · `allowUrlOverrides` `demo` `fakeFeeds` · `signText` · `roomUpgrades` `aura` `voice` `voiceName` `sfx` · `despair` `despairAfterSeconds` `despairMaxSeconds` · `niceSound` · `milestones`
+`devWallet` `rpc` `devPollSeconds` `ignoreWallets` · `allowUrlOverrides` `demo` `fakeFeeds` · `signText` · `disclaimer` · `roomUpgrades` `aura` `voice` `voiceName` `sfx` · `despair` `despairAfterSeconds` `despairMaxSeconds` · `niceSound` · `milestones`
 
 **Room upgrades:** the bedroom fills up as the real market cap climbs: trophy shelf (25K), gold chain (50K), car poster, sunglasses and a second
 shelf (100K), gold bars (250K), disco ball (500K), crown and gold chair trim (1M), gold rug ring (5M). Cup noodles and a pizza box sit on the

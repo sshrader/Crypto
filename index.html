@@ -13,7 +13,7 @@ canvas#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-actio
 .card{background:var(--card);border-radius:12px;padding:10px 14px;pointer-events:auto}
 .col{display:flex;flex-direction:column;gap:8px;min-width:150px}#auraBar{height:6px;border-radius:4px;background:rgba(255,255,255,.12);margin-top:6px;overflow:hidden}#auraFill{height:100%;width:50%;background:linear-gradient(90deg,#ff4d6d,#ffd24a,#2ee59d);transition:width .4s}.card.ap{box-shadow:0 0 0 2px #2ee59d}.card.an{box-shadow:0 0 0 2px #ff4d6d}
 .price{font-size:26px;font-weight:700}.small{font-size:12px;opacity:.7}
-.bot{bottom:calc(env(safe-area-inset-bottom,0px) + 12px);display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.bot{bottom:calc(env(safe-area-inset-bottom,0px) + 26px);display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
 button{pointer-events:auto;border:0;border-radius:10px;padding:12px 18px;font-size:15px;font-weight:700;color:#06060c;cursor:pointer}
 #pump{background:var(--up)}#dump{background:var(--down)}#auto{background:#8b8bff}
 .up{color:var(--up)}.down{color:var(--down)}
@@ -23,6 +23,7 @@ button{pointer-events:auto;border:0;border-radius:10px;padding:12px 18px;font-si
 #cname{font-weight:700;font-size:16px}
 #ctw{color:#8bb4ff;text-decoration:none}
 #ca{font-family:ui-monospace,monospace;font-size:11px;background:rgba(255,255,255,.08);padding:6px 8px;border-radius:8px;word-break:break-all;max-width:250px;user-select:all;-webkit-user-select:all;cursor:copy;margin-top:3px;touch-action:manipulation}
+#disc{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 5px);text-align:center;font-size:10px;line-height:1.3;opacity:.55;padding:0 16px;pointer-events:none}
 #toast{position:fixed;left:50%;top:26%;transform:translateX(-50%);font-size:34px;font-weight:900;text-align:center;pointer-events:none;opacity:0;text-shadow:0 3px 14px #000,0 0 22px #ff5fa2;white-space:nowrap}
 #toast.show{animation:pop 3s forwards}
 @keyframes pop{0%{opacity:0;transform:translate(-50%,14px) scale(.6)}10%{opacity:1;transform:translate(-50%,0) scale(1.12)}20%{transform:translate(-50%,0) scale(1)}80%{opacity:1}100%{opacity:0}}
@@ -43,6 +44,7 @@ button{pointer-events:auto;border:0;border-radius:10px;padding:12px 18px;font-si
  <div class="col"><div class="card"><div class="small">Trader mood</div><div class="price" id="mood" style="font-size:16px">…</div></div>
  <div class="card" id="auraCard"><div class="small">AURA · <span id="auraTier">Side character</span></div><div class="price" id="aura" style="font-size:22px">+0</div><div id="auraBar"><div id="auraFill"></div></div></div></div>
 </div>
+<div id="disc"></div>
 <div id="toast"></div>
 <div id="air"><span id="airT"></span> <a id="airL" target="_blank" rel="noopener">view tx ↗</a></div>
 <div class="hud bot">
@@ -683,6 +685,7 @@ function roomUpdate(dt){const m=roomMC(),ready=roomForce!=null||hasData()||DEMO;
   p.g.scale.setScalar(Math.max(.001,p.s));p.g.visible=p.s>.02;if(p.upd&&p.g.visible)p.upd(p,dt)});
  if(ready)roomInit=true}
 if(!AURA_ON){const c=$('auraCard');if(c)c.style.display='none'}
+{const d=$('disc'),txt=cfg.disclaimer==null?'For entertainment only. Not financial advice. Meme coins are extremely risky and you can lose everything. Do your own research.':String(cfg.disclaimer);if(d)d.textContent=txt}
 function frame(now){
  requestAnimationFrame(frame);
  const dt=Math.min(.05,(now-last)/1000);last=now;tt+=dt;tc+=dt;
