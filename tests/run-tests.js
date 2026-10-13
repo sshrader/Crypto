@@ -61,11 +61,11 @@ let passed = 0; const t = async (name, fn) => { try { await fn(); passed++; cons
   });
 
   await t('room: neon sign default, custom sign text, flicker loop runs', async () => {
-    assert(mainJs.includes("||'The Trader'"), 'default sign text missing');
+    assert(mainJs.includes("||'Trench Trader'"), 'default sign text missing');
     const o = boot({ cfg: { demo: true, signText: 'Custom Sign Text' } });
     o.run(1500);                                  // flicker timer fires several times in this span
     assert(o.hasData);
-    const w = {}; new Function('window', configSrc)(w); assert.strictEqual(w.TRADER_CONFIG.signText, 'The Trader');
+    const w = {}; new Function('window', configSrc)(w); assert.strictEqual(w.TRADER_CONFIG.signText, 'Trench Trader');
   });
 
   console.log('live data');

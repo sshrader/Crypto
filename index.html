@@ -114,7 +114,7 @@ box(.06,.06,8,uvMat(0x6a5cff,1.5),[-4.96,4.42,2.4]);
 box(.06,.06,8,uvMat(0x6a5cff,1.5),[4.96,4.42,2.4]);
 box(10,.04,.04,uvMat(0xff2bd6,1.3),[0,.08,-1.57]);                       // pink baseboard glow
 // neon sign
-const SIGN_TEXT=String((window.TRADER_CONFIG&&window.TRADER_CONFIG.signText)||'The Trader');
+const SIGN_TEXT=String((window.TRADER_CONFIG&&window.TRADER_CONFIG.signText)||'Trench Trader');
 function neonCanvas(txt){const c=document.createElement('canvas');c.width=1024;c.height=256;const g=c.getContext('2d');
  g.textBaseline='middle';g.lineJoin='round';g.textAlign='left';
  let fs=150;const fam='"Trebuchet MS","Arial Rounded MT Bold",Verdana,sans-serif';

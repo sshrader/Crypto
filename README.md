@@ -140,7 +140,7 @@ either lies on the bed crying (tears, hands over his eyes, pounding the mattress
 back and sits down once the price steadies (or after `despairMaxSeconds`). The camera drifts to follow him. Set `despair: false` to
 keep him in the chair. In demo mode the **😭 Meltdown** button triggers it (alternating bed / pacing).
 
-`signText` is the words on the neon sign on the back wall of the trader's blacklit bedroom (default "The Trader"). The room is
+`signText` is the words on the neon sign on the back wall of the trader's blacklit bedroom (default "Trench Trader"). The room is
 cut-away: walls and ceiling disappear when you orbit around to the outside, so you can always see in.
 
 `sensitivity`: 1 = default, higher = twitchier (rages/celebrates on smaller moves), lower = calmer.
