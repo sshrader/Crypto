@@ -262,7 +262,7 @@ let passed = 0; const t = async (name, fn) => { try { await fn(); passed++; cons
     o.queue.push({ act: 'dance', mc: 15000, label: ['x'] }); o.run(20); assert(o.aura >= 150 + 750 + 500 - 1, 'milestone +500: ' + o.aura);
   });
   await t('voice: speaks only when Sound is on, strips emoji, throttles chatter, priority lines cut in', async () => {
-    const o = boot({ cfg: { demo: true } });
+    const o = boot({ cfg: { demo: true, soundDefault: false } });
     o.say('Hello'); assert.strictEqual(o.spoken.length, 0, 'must stay silent while Sound is off');
     o.setSound(true); o.say('LET HIM COOK 🔥🔥', true); assert.deepStrictEqual(o.spoken, ['LET HIM COOK']);
     o.say('chatter'); assert.strictEqual(o.spoken.length, 1, 'non-priority line within 7s must be dropped');

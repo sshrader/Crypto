@@ -48,7 +48,7 @@ button{pointer-events:auto;border:0;border-radius:10px;padding:12px 18px;font-si
 <div id="toast"></div>
 <div id="air"><span id="airT"></span> <a id="airL" target="_blank" rel="noopener">view tx ↗</a></div>
 <div class="hud bot">
- <button id="pump">🚀 PUMP</button><button id="dump">📉 DUMP</button><button id="melt" style="background:#7aa2ff">😭 Meltdown</button><button id="roomUp" style="background:#b78bff">🏠 Room ⬆</button><button id="roomDn" style="background:#b78bff">🏚️ Room ⬇</button><button id="sim" style="background:#ffd24a">🪂 Sim airdrop</button><button id="mile" style="background:#ff9f1c">🎯 Next milestone</button><button id="auto">Auto: ON</button><button id="snd" style="background:#ffd166">🔊 Sound: OFF</button>
+ <button id="pump">🚀 PUMP</button><button id="dump">📉 DUMP</button><button id="melt" style="background:#7aa2ff">😭 Meltdown</button><button id="roomUp" style="background:#b78bff">🏠 Room ⬆</button><button id="roomDn" style="background:#b78bff">🏚️ Room ⬇</button><button id="sim" style="background:#ffd24a">🪂 Sim airdrop</button><button id="mile" style="background:#ff9f1c">🎯 Next milestone</button><button id="auto">Auto: ON</button><button id="snd" style="background:#ffd166">🔊 Sound: ON</button>
 </div>
 <script src="vendor/three.min.js"></script>
 <script>window.THREE||document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>')</script>
@@ -417,7 +417,7 @@ function drawScreen2(){const g=ctx2,w=280,h=460;g.fillStyle='#07070d';g.fillRect
   g.fillStyle='#fff';g.fillText(airB.l2,14,100);g.font='14px monospace';g.fillText(airB.l3,14,128)}
  tex2.needsUpdate=true}
 const NICE_URL=cfg.niceSound||'';
-let airB={t:0,l1:'',l2:'',l3:''},soundOn=false,lastNice=0,tweetT=0,whale={t:0,b:true,a:0};
+let airB={t:0,l1:'',l2:'',l3:''},soundOn=!(window.TRADER_CONFIG&&window.TRADER_CONFIG.soundDefault===false),lastNice=0,tweetT=0,whale={t:0,b:true,a:0};
 function nice(){if(!soundOn||performance.now()-lastNice<12000)return;lastNice=performance.now();
  try{if(NICE_URL){const au=new Audio(NICE_URL);au.volume=.9;au.play().catch(()=>{});return}
   const u=new SpeechSynthesisUtterance('nice');u.rate=.7;u.pitch=.8;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
@@ -482,6 +482,9 @@ function hud(){
 }
 $('pump').onclick=()=>{bias=.012;biasT=20};$('dump').onclick=()=>{bias=-.012;biasT=20};$('roomUp').onclick=()=>{const m=roomMC(),n=ROOM_STEPS.find(s=>s>m);roomForce=n==null?m:n;toast('Room test at '+fmtMC(roomForce))};$('roomDn').onclick=()=>{const m=roomMC(),p=[...ROOM_STEPS].reverse().find(s=>s<m);roomForce=p==null?0:p;toast('Room test at '+fmtMC(roomForce))};
 $('melt').onclick=()=>{if(mode!==3&&mode!==4){meltK=meltK==='bed'?'pace':'bed';startDespair(meltK)}};
+if(!soundOn)$('snd').textContent='🔊 Sound: OFF';
+// browsers keep audio muted until the visitor interacts once; unlock it on the first click / key / touch
+['pointerdown','keydown','touchstart'].forEach(ev=>addEventListener(ev,function u(){removeEventListener(ev,u);if(soundOn){try{const a=ac();a&&a.resume&&a.resume()}catch(e){}}},{passive:true}));
 $('snd').onclick=e=>{soundOn=!soundOn;e.target.textContent='🔊 Sound: '+(soundOn?'ON':'OFF');if(soundOn){try{const a=ac();a&&a.resume&&a.resume()}catch(e){}sfx('aura');lastNice=0;nice()}};
 $('sim').onclick=()=>{const b58='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz',rw=()=>Array.from({length:44},()=>b58[Math.random()*58|0]).join('');
  const to=Array.from({length:1+(Math.random()*4|0)},()=>({w:rw(),a:1000+Math.random()*40000}));

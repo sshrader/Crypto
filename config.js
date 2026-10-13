@@ -105,6 +105,7 @@ window.TRADER_CONFIG = {
      sfx           synthesized punch / crush / level-up / sad / cash sounds.  */
   roomUpgrades: true,
   disclaimer: 'For entertainment only. Not financial advice. Meme coins are extremely risky and you can lose everything. Do your own research.',   // small text at the bottom of the page. '' = none
+  soundDefault: true,   // sound starts ON (browsers still wait for the visitor's first click/tap before any audio plays). false = starts OFF.
   comingSoonImage: 'assets/pawpad.png',   // optional transparent paw artwork for the teaser poster ('' = draw a simple paw instead)
   comingSoon: 'Pawpad',   // text on the small "COMING SOON" teaser poster on the back wall. '' = no poster.
   aura: true,
