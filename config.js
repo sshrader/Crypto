@@ -79,7 +79,7 @@ window.TRADER_CONFIG = {
      signText  the words on the neon sign on the back wall. The first word
                glows cyan and the rest pink. Keep it short (about 14
                characters or fewer) so it fits.                            */
-  signText: 'The Trader',
+  signText: 'Trench Trader',
 
   /* ---------- 4c. MELTDOWN -----------------------------------------------
      When the coin keeps dumping, he first rages at his desk. If it goes on
