@@ -213,7 +213,7 @@ let passed = 0; const t = async (name, fn) => { try { await fn(); passed++; cons
   console.log('build script (CA_KEY)');
   await t('scripts/build.js injects CA_KEY, falls back to config.js, rejects bad values, keeps dev files out', async () => {
     const cp = require('child_process'), os = require('os'), tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'build-'));
-    const run = (env, dir) => cp.spawnSync('node', [path.join(root, 'scripts', 'build.js'), path.join(tmp, dir)], { env: Object.assign({}, process.env, { CA_KEY: '' }, env), encoding: 'utf8' });
+    const run = (env, dir) => cp.spawnSync('node', [path.join(root, 'scripts', 'build.js'), path.join(tmp, dir)], { env: Object.assign({}, process.env, { CA_KEY: '', DEV_WALLET: '' }, env), encoding: 'utf8' });
     const a = run({ CA_KEY: MINT }, 'a'); assert.strictEqual(a.status, 0, a.stderr);
     const cfgA = fs.readFileSync(path.join(tmp, 'a', 'config.js'), 'utf8'); assert(cfgA.includes("ca: '" + MINT + "'"), 'CA_KEY not injected');
     const w = {}; new Function('window', cfgA)(w); assert.strictEqual(w.TRADER_CONFIG.ca, MINT); assert(Array.isArray(w.TRADER_CONFIG.milestones), 'rest of config lost');
@@ -221,6 +221,12 @@ let passed = 0; const t = async (name, fn) => { try { await fn(); passed++; cons
     ['tests', 'scripts', '.github', 'README.md'].forEach(f => assert(!fs.existsSync(path.join(tmp, 'a', f)), 'should not publish ' + f));
     const b = run({}, 'b'); assert.strictEqual(b.status, 0); assert.strictEqual(fs.readFileSync(path.join(tmp, 'b', 'config.js'), 'utf8'), configSrc, 'unset CA_KEY must leave config.js unchanged');
     const lc = run({ CA_key: MINT }, 'lc'); assert.strictEqual(lc.status, 0, lc.stderr); assert(fs.readFileSync(path.join(tmp, 'lc', 'config.js'), 'utf8').includes("ca: '" + MINT + "'"), 'CA_key (different capitalisation) not picked up');
+    const dw = run({ dev_wallet: DEV }, 'dw'); assert.strictEqual(dw.status, 0, dw.stderr);
+    const cfgD = fs.readFileSync(path.join(tmp, 'dw', 'config.js'), 'utf8'); assert(cfgD.includes("devWallet: '" + DEV + "'"), 'DEV_WALLET not injected');
+    assert(cfgD.includes("ca: '") && !cfgD.includes("ca: '" + MINT + "'"), 'ca must be untouched when only DEV_WALLET is set');
+    const both = run({ CA_KEY: MINT, DEV_WALLET: DEV }, 'both'); const w2 = {}; new Function('window', fs.readFileSync(path.join(tmp, 'both', 'config.js'), 'utf8'))(w2);
+    assert.strictEqual(w2.TRADER_CONFIG.ca, MINT); assert.strictEqual(w2.TRADER_CONFIG.devWallet, DEV);
+    assert.notStrictEqual(run({ DEV_WALLET: 'nope!' }, 'dbad').status, 0, 'invalid DEV_WALLET must fail the build');
     assert.notStrictEqual(run({ CA_KEY: 'not a real address!' }, 'c').status, 0, 'invalid CA_KEY must fail the build');
     fs.rmSync(tmp, { recursive: true, force: true });
   });

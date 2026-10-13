@@ -1,7 +1,7 @@
 // Builds the deployable site into ./dist (or the folder given as argv[2]).
-// If the CA_KEY environment variable is set, it replaces the `ca:` value in the
-// published config.js. If it is empty or unset, config.js is published unchanged.
-// Run:  CA_KEY=<mint address> node scripts/build.js
+// Environment variables CA_KEY and DEV_WALLET, when set, replace `ca:` and `devWallet:` in the published config.js.
+// Unset or empty ones leave config.js unchanged.
+// Run:  CA_KEY=<mint address> DEV_WALLET=<wallet> node scripts/build.js
 const fs = require('fs'), path = require('path');
 const root = path.join(__dirname, '..');
 const out = path.resolve(process.argv[2] || path.join(root, 'dist'));
@@ -18,17 +18,24 @@ fs.rmSync(out, { recursive: true, force: true });
   }
 })(root, out);
 
-// Env var names are case-sensitive on Linux build machines, so accept CA_KEY in any capitalisation (CA_key, ca_key ...).
-const envName = Object.keys(process.env).find(k => k.toUpperCase() === 'CA_KEY' && String(process.env[k]).trim());
-const ca = envName ? String(process.env[envName]).trim() : '';
-if (!ca) console.log('CA_KEY: not found in the build environment (variables whose name contains "CA": ' + (Object.keys(process.env).filter(k => /(^|_)CA(_|$)/i.test(k)).join(', ') || 'none') + ')');
-if (ca) {
-  if (!B58.test(ca)) { console.error('CA_KEY is not a valid Solana address (32-44 base58 characters): ' + JSON.stringify(ca)); process.exit(1); }
-  const file = path.join(out, 'config.js'), src = fs.readFileSync(file, 'utf8');
-  const re = /(\bca\s*:\s*)(['"])[^'"]*\2/;
-  if (!re.test(src)) { console.error("Could not find the  ca: '...'  line in config.js"); process.exit(1); }
-  fs.writeFileSync(file, src.replace(re, (_, k) => k + "'" + ca + "'"));
-  console.log('Built ' + out + ' with CA from ' + envName + ': ' + ca);
-} else {
-  console.log('Built ' + out + ' (CA_KEY not set, using ca from config.js)');
+// Settings that can come from the host's environment variables. Names are matched ignoring case and underscores
+// (CA_KEY, CA_key, ca_key, CAKEY ... and DEV_WALLET, dev_wallet, DevWallet ...), because Linux build machines are case-sensitive.
+const VARS = [
+  { env: 'CA_KEY', key: 'ca', what: 'a Solana token address' },
+  { env: 'DEV_WALLET', key: 'devWallet', what: 'a Solana wallet address' },
+];
+const norm = n => n.replace(/_/g, '').toUpperCase();
+const cfgFile = path.join(out, 'config.js');
+let cfgSrc = fs.readFileSync(cfgFile, 'utf8'), changed = false;
+for (const v of VARS) {
+  const name = Object.keys(process.env).find(k => norm(k) === norm(v.env) && String(process.env[k]).trim());
+  const val = name ? String(process.env[name]).trim() : '';
+  if (!val) { console.log(v.env + ': not set, using ' + v.key + ' from config.js'); continue; }
+  if (!B58.test(val)) { console.error(v.env + ' is not ' + v.what + ' (32-44 base58 characters): ' + JSON.stringify(val)); process.exit(1); }
+  const re = new RegExp("(\\b" + v.key + "\\s*:\\s*)(['\"])[^'\"]*\\2");
+  if (!re.test(cfgSrc)) { console.error("Could not find the  " + v.key + ": '...'  line in config.js"); process.exit(1); }
+  cfgSrc = cfgSrc.replace(re, (_, k) => k + "'" + val + "'"); changed = true;
+  console.log(v.env + ': using ' + val + ' (from ' + name + ') for ' + v.key);
 }
+if (changed) fs.writeFileSync(cfgFile, cfgSrc);
+console.log('Built ' + out);
