@@ -58,7 +58,7 @@ Set `logoFromDexScreener: true` only if you ever want DexScreener's logo as a fa
 
 ## 3. What is real and what is decoration
 
-**Real (from DexScreener, refreshed every `pollSeconds`):** price, market cap (FDV if market cap isn't listed), 24h change,
+**Real (from DexScreener, refreshed every `pollSeconds`):** price, market cap (FDV if market cap isn't listed), 1-minute change (measured from our own polls; it also drives the trader's mood),
 the left monitor's stats (5m/1h/6h/24h change, volume, buys/sells, liquidity), name/ticker/X link, and everything the trader
 does — typing speed, mood, rage, celebration, milestones, the candle chart.
 

@@ -375,13 +375,14 @@ function tick(){
  if(FAKE){pushTrade(old);whaleTick();tweetTick()}
  drawScreen();drawScreen2();hud();niceCheck();
 }
-function rawRate(){return 5+(mom*(live?9000:1500)+(live?m5*.6:0))*SENS}
+function rawRate(){return 5+(mom*(live?9000:1500)+(live?chg1m*3+m5*.1:0))*SENS}
 function rate(){return Math.max(.4,Math.min(22,rawRate()))}
 function fmt(p){return p>=1?p.toFixed(4):p>=.01?p.toFixed(5):p.toPrecision(4)}
 // % change over the last minute, measured from our own polls (DexScreener has no 1-minute figure)
-const pxLog=[];
-function logPx(px){const t=Date.now();pxLog.push({t,px});while(pxLog.length>2&&pxLog[1].t<=t-90000)pxLog.shift()}
-function chgPct(){if(!live)return (price/start-1)*100;if(pxLog.length<2)return 0;const now=pxLog[pxLog.length-1],cut=now.t-60000;let ref=pxLog[0];for(const e of pxLog){if(e.t<=cut)ref=e;else break}return ref.px>0?(now.px/ref.px-1)*100:0}
+const pxLog=[];let chg1m=0;
+function logPx(px){const t=Date.now();pxLog.push({t,px});while(pxLog.length>2&&pxLog[1].t<=t-90000)pxLog.shift();
+ if(pxLog.length<2){chg1m=0;return}const cut=t-60000;let ref=pxLog[0];for(const e of pxLog){if(e.t<=cut)ref=e;else break}chg1m=ref.px>0?(px/ref.px-1)*100:0}
+function chgPct(){return live?chg1m:(price/start-1)*100}
 function pushTrade(old){const n=1+(Math.random()*2|0);for(let i=0;i<n;i++)trades.unshift({b:Math.random()<(price>=old?.65:.35),a:Math.round(Math.pow(Math.random(),3)*90000+200),p:price});trades.length=Math.min(trades.length,22)}
 const usd=v=>v==null||isNaN(v)?'—':v>=1e9?'$'+(v/1e9).toFixed(2)+'B':v>=1e6?'$'+(v/1e6).toFixed(2)+'M':v>=1e3?'$'+(v/1e3).toFixed(1)+'K':'$'+Math.round(v);
 function drawStats(g,w){
