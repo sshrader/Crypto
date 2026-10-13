@@ -36,6 +36,13 @@ Look at the small label next to **MARKET CAP** in the top-left card:
 | `· invalid contract address in config.js` | `ca` isn't a valid base58 address. |
 | `· DEMO (simulated)` | Demo mode is on — the price is fake. |
 
+## Buttons, sharing and link previews
+
+- **Links on the coin card:** 🟢 Buy (`buyUrl` in `config.js`, default `https://pump.fun/coin/{CA}`; `{CA}` is your `CA_KEY`), 📈 Chart (DexScreener), 𝕏 Follow (found automatically from DexScreener, or `twitterUrl`), ✈️ Telegram (set `telegram: 'https://t.me/...'`) and 📋 Copy CA.
+- **📸 Share:** saves a picture of the scene with a market-cap banner. On phones it opens the share sheet; on desktop it downloads the picture and opens a pre-filled X post.
+- **Tap-to-enter screen** (`enterScreen`): the one tap that lets browsers play sound.
+- **Link previews:** `index.html` carries Open Graph tags using `assets/og.png`. They need an absolute URL, so the build fills it from `SITE_URL` (your custom domain, if any) or Vercel's `VERCEL_PROJECT_PRODUCTION_URL`. Posted links then show the TT card.
+
 ## 2. Change the coin (the variable)
 
 Open `config.js` and edit one line:

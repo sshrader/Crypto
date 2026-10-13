@@ -38,4 +38,14 @@ for (const v of VARS) {
   console.log(v.env + ': using ' + val + ' (from ' + name + ') for ' + v.key);
 }
 if (changed) fs.writeFileSync(cfgFile, cfgSrc);
+
+// Link previews (X, Telegram, Discord) need an absolute image URL, so index.html carries a %SITE_URL% placeholder.
+// Uses SITE_URL (your custom domain, if you have one), else Vercel's own production-domain variable.
+const rawHost = ['SITE_URL', 'VERCEL_PROJECT_PRODUCTION_URL', 'VERCEL_URL'].map(k => String(process.env[k] || '').trim()).find(Boolean) || '';
+const host = rawHost.replace(/^https?:\/\//i, '').replace(/\/+$/, '');
+const siteUrl = /^[a-z0-9.-]+(:\d+)?$/i.test(host) ? 'https://' + host : '';
+if (host && !siteUrl) console.warn('SITE_URL ignored (expected a domain like mycoin.xyz): ' + JSON.stringify(rawHost));
+const idx = path.join(out, 'index.html');
+fs.writeFileSync(idx, fs.readFileSync(idx, 'utf8').split('%SITE_URL%').join(siteUrl));
+console.log(siteUrl ? 'Link previews use ' + siteUrl : 'SITE_URL not set: link previews will use a relative image path (set SITE_URL to your domain for best results)');
 console.log('Built ' + out);

@@ -3,7 +3,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Live 3D meme-coin day trader that reacts to the real market cap.">
 <link id="fav" rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🚀%3C/text%3E%3C/svg%3E">
-<title>Meme Day Trader</title>
+<title>Trench Trader — live 3D meme-coin trader</title>
+<meta property="og:type" content="website"><meta property="og:title" content="Trench Trader — live 3D meme-coin trader">
+<meta property="og:description" content="Watch a 3D day-trader panic, party and meltdown with the real market cap, live.">
+<meta property="og:image" content="%SITE_URL%/assets/og.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Trench Trader — live 3D meme-coin trader">
+<meta name="twitter:description" content="Watch a 3D day-trader panic, party and meltdown with the real market cap, live."><meta name="twitter:image" content="%SITE_URL%/assets/og.png">
 <style>
 :root{--bg:#0b0b14;--fg:#e8e8f5;--up:#2ee59d;--down:#ff4d6d;--card:rgba(20,20,35,.85);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,sans-serif;overflow:hidden}
@@ -31,15 +36,38 @@ button{pointer-events:auto;border:0;border-radius:10px;padding:12px 18px;font-si
 #air a{color:#8bb4ff;margin-left:6px;font-weight:600}
 #air.show{pointer-events:auto;animation:airin 10s forwards}
 @keyframes airin{0%{opacity:0;transform:translate(-50%,12px)}4%{opacity:1;transform:translate(-50%,0)}90%{opacity:1}100%{opacity:0;visibility:hidden}}
-@media(max-width:600px){#toast{font-size:22px}}
+.links{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.pill{display:inline-block;background:rgba(255,255,255,.1);color:var(--fg);padding:6px 11px;border-radius:999px;font-size:12px;font-weight:700;text-decoration:none;border:0;line-height:1.2;touch-action:manipulation}
+.pill.buy{background:var(--up);color:#06060c}
+#enter{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 40%,rgba(40,20,80,.9),rgba(5,5,12,.97));backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);transition:opacity .5s;text-align:center;padding:24px}
+#enter.gone{opacity:0;pointer-events:none}
+#elogo{width:132px;height:132px;border-radius:50%;box-shadow:0 0 40px #ff2bd6aa,0 0 80px #7df9ff55;margin-bottom:18px}
+.et{font-size:34px;font-weight:900;letter-spacing:.06em;background:linear-gradient(90deg,#7df9ff,#ff4fd8);-webkit-background-clip:text;background-clip:text;color:transparent}
+.es{opacity:.7;margin:6px 0 22px}
+#egoBtn{background:linear-gradient(90deg,#7df9ff,#ff4fd8);padding:16px 26px;font-size:17px;border-radius:14px;animation:ep 1.6s infinite}
+@keyframes ep{50%{transform:scale(1.05)}}
+.en{font-size:12px;opacity:.5;margin-top:14px}
+#egoBtn:focus{outline:none}
+@media(max-width:600px){#toast{font-size:22px}
+ .hud{left:8px;right:8px}.top{gap:6px}
+ #coin{width:100%;box-sizing:border-box;padding:8px 10px}
+ #coin .crow{gap:8px}#logo{width:36px;height:36px}#cname{font-size:15px}
+ #coin .clab,#ca{display:none}
+ .links{margin-top:6px;gap:5px}.pill{padding:5px 9px;font-size:11px}
+ .price{font-size:22px}
+ .col{flex-direction:row;width:100%;gap:6px}.col .card{flex:1;min-width:0;padding:7px 10px}
+ .bot{bottom:calc(env(safe-area-inset-bottom,0px) + 44px);gap:6px}
+ button{padding:9px 14px;font-size:13px}
+ #disc{font-size:9px}#air{bottom:calc(env(safe-area-inset-bottom,0px) + 100px)}}
 </style></head><body>
 <canvas id="c"></canvas>
+<div id="enter"><div><img id="elogo" alt=""><div class="et" id="etitle">TRENCH TRADER</div><div class="es">Live 3D meme-coin trader</div><button id="egoBtn" autofocus>🔊 TAP TO ENTER THE TRENCH</button><div class="en">sound on · best with headphones</div></div></div>
 <div class="hud top">
  <div class="card" id="coin">
   <div class="crow"><div id="logo">?</div><div><div id="cname">Loading…</div><div class="small"><span id="csym"></span><span id="ctsep"> · </span><a id="ctw" target="_blank" rel="noopener"></a></div></div></div>
-  <div class="small" style="margin-top:8px">Contract — double-click to copy</div>
-  <div id="ca" title="Double-click to copy"></div>
-  <div class="small" style="margin-top:8px"><span id="mclabel">MARKET CAP</span> <span id="src"></span> <a id="dxl" target="_blank" rel="noopener" style="display:none;color:#8bb4ff;text-decoration:none">DexScreener ↗</a></div><div class="price" id="price">$0</div><div id="chg">0%</div>
+  <div class="small clab" style="margin-top:8px">Contract</div>
+  <div id="ca" title="Double-click to copy"></div><div class="links" id="links"></div>
+  <div class="small" style="margin-top:8px"><span id="mclabel">MARKET CAP</span> <span id="src"></span></div><div class="price" id="price">$0</div><div id="chg">0%</div>
  </div>
  <div class="col"><div class="card"><div class="small">Trader mood</div><div class="price" id="mood" style="font-size:16px">…</div></div>
  <div class="card" id="auraCard"><div class="small">AURA · <span id="auraTier">Side character</span></div><div class="price" id="aura" style="font-size:22px">+0</div><div id="auraBar"><div id="auraFill"></div></div></div></div>
@@ -48,7 +76,7 @@ button{pointer-events:auto;border:0;border-radius:10px;padding:12px 18px;font-si
 <div id="toast"></div>
 <div id="air"><span id="airT"></span> <a id="airL" target="_blank" rel="noopener">view tx ↗</a></div>
 <div class="hud bot">
- <button id="pump">🚀 PUMP</button><button id="dump">📉 DUMP</button><button id="melt" style="background:#7aa2ff">😭 Meltdown</button><button id="roomUp" style="background:#b78bff">🏠 Room ⬆</button><button id="roomDn" style="background:#b78bff">🏚️ Room ⬇</button><button id="sim" style="background:#ffd24a">🪂 Sim airdrop</button><button id="mile" style="background:#ff9f1c">🎯 Next milestone</button><button id="auto">Auto: ON</button><button id="snd" style="background:#ffd166">🔊 Sound: ON</button>
+ <button id="share" style="background:#7df9ff">📸 Share</button><button id="pump">🚀 PUMP</button><button id="dump">📉 DUMP</button><button id="melt" style="background:#7aa2ff">😭 Meltdown</button><button id="roomUp" style="background:#b78bff">🏠 Room ⬆</button><button id="roomDn" style="background:#b78bff">🏚️ Room ⬇</button><button id="sim" style="background:#ffd24a">🪂 Sim airdrop</button><button id="mile" style="background:#ff9f1c">🎯 Next milestone</button><button id="auto">Auto: ON</button><button id="snd" style="background:#ffd166">🔊 Sound: ON</button>
 </div>
 <script src="vendor/three.min.js"></script>
 <script>window.THREE||document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>')</script>
@@ -332,11 +360,19 @@ function setCoinUI(){uiKey=[COIN.name,COIN.symbol,COIN.logo,COIN.twitterUrl].joi
  $('ca').textContent=COIN.ca||'Set your contract address in config.js';
  const tw=$('ctw');tw.textContent=COIN.twitter||'';$('ctsep').style.display=COIN.twitter&&COIN.symbol?'':'none';
  if(/^https:\/\//.test(COIN.twitterUrl||''))tw.href=COIN.twitterUrl;else tw.removeAttribute('href');
- document.title=(COIN.name||'Meme Day Trader')+' · Live Trader';
+ document.title=(COIN.name?COIN.name+' · ':'')+'Trench Trader';buildLinks();
  const lg=$('logo'),ini=(COIN.symbol||COIN.name||'?').replace('$','')[0]||'?';lg.textContent='';
  if(COIN.logo){const im=document.createElement('img');im.src=COIN.logo;im.alt='';im.onload=()=>{const f=document.getElementById('fav');if(f)f.href=COIN.logo};im.onerror=()=>{console.warn('logo file not found: '+COIN.logo);im.remove();lg.textContent=ini};lg.appendChild(im)}else lg.textContent=ini;
  drawScreen3()}
-$('ca').ondblclick=async()=>{if(!COIN.ca)return;let ok=false;try{await navigator.clipboard.writeText(COIN.ca);ok=true}catch(e){try{const rg=document.createRange();rg.selectNodeContents($('ca'));const se=getSelection();se.removeAllRanges();se.addRange(rg);ok=document.execCommand('copy')}catch(e2){}}toast(ok?'📋 CA copied!':'Press Ctrl/Cmd + C to copy')};
+async function copyCA(){if(!COIN.ca)return;let ok=false;try{await navigator.clipboard.writeText(COIN.ca);ok=true}catch(e){try{const rg=document.createRange();rg.selectNodeContents($('ca'));const se=getSelection();se.removeAllRanges();se.addRange(rg);ok=document.execCommand('copy')}catch(e2){}}toast(ok?'📋 CA copied!':'Press Ctrl/Cmd + C to copy')}
+$('ca').ondblclick=copyCA;
+const BUY_T=/^https:\/\//.test(cfg.buyUrl||'')?cfg.buyUrl:'https://pump.fun/coin/{CA}';
+function buildLinks(){const el=$('links');if(!el)return;el.textContent='';
+ const add=(t,href,cls,fn)=>{const a=document.createElement(href?'a':'button');a.className='pill'+(cls?' '+cls:'');a.textContent=t;if(href){a.href=href;a.target='_blank';a.rel='noopener noreferrer'}else a.onclick=fn;el.appendChild(a)};
+ if(CA_OK){add('🟢 Buy',BUY_T.replace('{CA}',encodeURIComponent(COIN.ca)),'buy');add('📈 Chart','https://dexscreener.com/solana/'+encodeURIComponent(COIN.ca))}
+ if(/^https:\/\//.test(COIN.twitterUrl||''))add('𝕏 Follow',COIN.twitterUrl);
+ if(/^https:\/\/(t\.me|telegram\.me)\//.test(cfg.telegram||''))add('✈️ Telegram',cfg.telegram);
+ if(COIN.ca)add('📋 Copy CA',null,'',copyCA)}
 const sh6=w=>w.slice(0,4)+'…'+w.slice(-4),fa=v=>v>=1e6?(v/1e6).toFixed(2)+'M':v>=1e3?(v/1e3).toFixed(1)+'K':Math.round(v).toString();
 function showAirdrop(ad){const n=ad.to.length,f=ad.to[0],who=sh6(f.w)+(n>1?' +'+(n-1)+' more':'');
  $('airT').textContent='🪂 AIRDROP · '+fa(ad.total)+' '+COIN.symbol+' → '+who;$('airT').title=f.w;
@@ -490,6 +526,33 @@ if(!soundOn)$('snd').textContent='🔊 Sound: OFF';
 // browsers keep audio muted until the visitor interacts once; unlock it on the first click / key / touch
 ['pointerdown','keydown','touchstart'].forEach(ev=>addEventListener(ev,function u(){removeEventListener(ev,u);if(soundOn){try{const a=ac();a&&a.resume&&a.resume()}catch(e){}}},{passive:true}));
 $('snd').onclick=e=>{soundOn=!soundOn;e.target.textContent='🔊 Sound: '+(soundOn?'ON':'OFF');if(soundOn){try{const a=ac();a&&a.resume&&a.resume()}catch(e){}sfx('aura');lastNice=0;nice()}};
+// 📸 share: snapshot of the scene + a stats banner; native share sheet on phones, download + pre-filled X post on desktop
+function shareShot(){try{
+ R.render(S,cam);const w=cv.width,h=cv.height,k=Math.min(1,1280/w),W=Math.round(w*k),H=Math.round(h*k),u=Math.min(Math.max(.4,H*.14/90),W/700),bar=Math.round(90*u);
+ const c=document.createElement('canvas');c.width=W;c.height=H+bar;const g=c.getContext('2d');g.drawImage(cv,0,0,W,H);
+ g.fillStyle='#0b0b14';g.fillRect(0,H,W,bar);g.fillStyle='#ff4fd8';g.fillRect(0,H,W,3);
+ const chg=chgPct(),li=document.querySelector('#logo img'),mcT=fmtMC(mc());let x=16*u;
+ if(li&&li.complete&&li.naturalWidth){g.save();g.beginPath();g.arc(x+30*u,H+bar/2,30*u,0,7);g.clip();g.drawImage(li,x,H+bar/2-30*u,60*u,60*u);g.restore();x+=74*u}
+ g.textBaseline='middle';g.fillStyle='#e8e8f5';g.font='800 '+(22*u)+'px system-ui,sans-serif';g.fillText((COIN.symbol||COIN.name||'').slice(0,18),x,H+bar*.32);
+ g.font='800 '+(30*u)+'px system-ui,sans-serif';g.fillText(mcT,x,H+bar*.68);const mw=g.measureText(mcT).width;
+ if(hasData()){g.fillStyle=chg>=0?'#2ee59d':'#ff4d6d';g.font='800 '+(20*u)+'px system-ui,sans-serif';g.fillText((chg>=0?'▲ +':'▼ ')+chg.toFixed(1)+'% 1m',x+mw+14*u,H+bar*.68)}
+ g.textAlign='right';g.fillStyle='#7df9ff';g.font='900 '+(26*u)+'px system-ui,sans-serif';g.fillText((cfg.signText||'Trench Trader').toUpperCase(),W-16*u,H+bar*.38);
+ g.fillStyle='rgba(232,232,245,.6)';g.font='600 '+(15*u)+'px system-ui,sans-serif';g.fillText(location.protocol==='file:'?'live 3D meme-coin trader':location.host,W-16*u,H+bar*.7);
+ const url=c.toDataURL('image/png'),bin=atob(url.split(',')[1]),u8=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);
+ const file=new File([u8],'trench-trader.png',{type:'image/png'}),page=location.protocol==='file:'?'':location.origin+location.pathname;
+ const txt=(COIN.symbol||COIN.name||'This coin')+' at '+mcT+(hasData()?' ('+(chg>=0?'+':'')+chg.toFixed(1)+'% 1m)':'')+' - watching the Trench Trader react live 👀';
+ if(navigator.canShare&&navigator.canShare({files:[file]})){navigator.share({files:[file],text:txt,url:page||undefined}).catch(()=>{});return}
+ const a=document.createElement('a');a.href=url;a.download='trench-trader.png';document.body.appendChild(a);a.click();a.remove();
+ window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent(txt)+(page?'&url='+encodeURIComponent(page):''),'_blank','noopener');toast('📸 Saved - attach it to your post')
+}catch(e){console.warn('share failed',e);toast('Could not make the picture')}}
+$('share').onclick=shareShot;
+// first-visit screen: one tap unlocks browser audio (sound effects, voice, "nice" clip)
+function unlockAudio(){try{const a=ac();a&&a.resume&&a.resume()}catch(e){}try{if(window.speechSynthesis){const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u)}}catch(e){}}
+(function(){const en=$('enter');if(!en)return;
+ if(cfg.enterScreen===false||!soundOn){en.remove();return}
+ const et=$('etitle');if(et)et.textContent=(cfg.signText||'Trench Trader').toUpperCase();
+ const el=$('elogo');if(COIN.logo){el.src=COIN.logo;el.onerror=()=>{el.style.display='none'}}else el.style.display='none';
+ $('egoBtn').onclick=()=>{unlockAudio();en.classList.add('gone');setTimeout(()=>en.remove(),600);sfx('aura')}})();
 $('sim').onclick=()=>{const b58='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz',rw=()=>Array.from({length:44},()=>b58[Math.random()*58|0]).join('');
  const to=Array.from({length:1+(Math.random()*4|0)},()=>({w:rw(),a:1000+Math.random()*40000}));
  queue.push({act:'distribute',label:'🪂 DISTRIBUTING AIRDROP…',info:{sig:'',total:to.reduce((t,x)=>t+x.a,0),to}})};
@@ -516,7 +579,6 @@ async function poll(){
   const tws=(inf.socials||[]).find(x=>x&&x.type==='twitter'&&/^https:\/\//.test(x.url||''));
   if(tws&&!COIN.twitterUrl){COIN.twitterUrl=tws.url;if(!COIN.twitter)COIN.twitter='@'+tws.url.split('?')[0].split('/').filter(Boolean).pop()}
   stats={t:Date.now(),dex:p.dexId,pc:p.priceChange||{},vol:p.volume||{},tx:p.txns||{},liq:(p.liquidity||{}).usd};
-  if(/^https:\/\/dexscreener\.com\//.test(p.url||'')){const l=$('dxl');l.href=p.url;l.style.display=''}
   if([COIN.name,COIN.symbol,COIN.logo,COIN.twitterUrl].join('|')!==uiKey)setCoinUI();
   if(DEMO){drawScreen2();drawScreen3();return}
   const mcv=p.marketCap||p.fdv;mcOK=mcv>0;mcScale=mcOK?mcv/px:1;

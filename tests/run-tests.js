@@ -228,6 +228,11 @@ let passed = 0; const t = async (name, fn) => { try { await fn(); passed++; cons
     assert.strictEqual(w2.TRADER_CONFIG.ca, MINT); assert.strictEqual(w2.TRADER_CONFIG.devWallet, DEV);
     assert.notStrictEqual(run({ DEV_WALLET: 'nope!' }, 'dbad').status, 0, 'invalid DEV_WALLET must fail the build');
     assert.notStrictEqual(run({ CA_KEY: 'not a real address!' }, 'c').status, 0, 'invalid CA_KEY must fail the build');
+    const su = run({ VERCEL_PROJECT_PRODUCTION_URL: 'trench.example.app' }, 'su'); assert.strictEqual(su.status, 0, su.stderr);
+    const idxS = fs.readFileSync(path.join(tmp, 'su', 'index.html'), 'utf8'); assert(idxS.includes('content="https://trench.example.app/assets/og.png"'), 'og:image not absolute'); assert(!idxS.includes('%SITE_URL%'));
+    const own = run({ SITE_URL: 'https://mycoin.xyz/', VERCEL_URL: 'x.vercel.app' }, 'own'); assert(fs.readFileSync(path.join(tmp, 'own', 'index.html'), 'utf8').includes('https://mycoin.xyz/assets/og.png'), 'SITE_URL should win');
+    assert(!fs.readFileSync(path.join(tmp, 'a', 'index.html'), 'utf8').includes('%SITE_URL%'), 'placeholder must never be published');
+    assert(fs.existsSync(path.join(tmp, 'a', 'assets', 'og.png')), 'og.png missing');
     fs.rmSync(tmp, { recursive: true, force: true });
   });
 
