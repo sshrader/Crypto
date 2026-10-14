@@ -106,6 +106,7 @@ window.TRADER_CONFIG = {
   roomUpgrades: true,
   disclaimer: 'For entertainment only. Not financial advice. Meme coins are extremely risky and you can lose everything. Do your own research.',   // small text at the bottom of the page. '' = none
   soundDefault: true,   // sound starts ON (browsers still wait for the visitor's first click/tap before any audio plays). false = starts OFF.
+  partySeconds: 5,      // how long he celebrates (pump party and milestone dances) before sitting back down to trade
   enterScreen: true,    // "Tap to enter" screen on first visit (this tap is what lets browsers play sound). false = skip it.
   buyUrl: 'https://pump.fun/coin/{CA}',   // the 🟢 Buy button; {CA} is replaced by your contract address (CA_KEY). Must start with https://
   comingSoonImage: 'assets/pawpad.png',   // optional transparent paw artwork for the teaser poster ('' = draw a simple paw instead)
