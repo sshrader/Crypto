@@ -343,7 +343,7 @@ const SENS=cfg.sensitivity||1,CANDLE_TICKS=Math.max(2,Math.round((cfg.candleSeco
 const MILES=(cfg.milestones||[]).map(m=>Object.assign({done:false},m));
 const CA=COIN.ca;
 let mode=0,flash=0,shake=0,sym=COIN.symbol||'$COIN',live=false,target=0,m5=0,price=0.0420,hist=[],mom=0,drift=0,driftT=0,auto=true,bias=0,biasT=0,start=price;
-let DS=null,rageT=0,despCool=0,camF=0,tearAcc=0,meltK='pace'; // meltdown state
+let partyT=0,partyArm=true,DS=null,rageT=0,despCool=0,camF=0,tearAcc=0,meltK='pace'; // meltdown state
 let statusMsg=CA_OK?'connecting…':DEMO?'':CA_IN?'invalid contract address in config.js':'set your contract address in config.js',fails=0,stats=null;
 for(let i=0;i<90;i++)hist.push(price);
 const candles=[];let cTicks=0;
@@ -353,7 +353,8 @@ seedCandles(price);
 let mcScale=5000/.042,mcOK=DEMO;const mc=()=>price*mcScale,hasData=()=>live||DEMO;
 function fmtMC(v){if(!hasData())return'—';if(!mcOK)return'$'+fmt(price);return v>=1e9?'$'+(v/1e9).toFixed(2)+'B':v>=1e6?'$'+(v/1e6).toFixed(2)+'M':v>=1e3?'$'+(v/1e3).toFixed(v>=1e5?0:1)+'K':'$'+Math.round(v)}
 function toast(t){const el=$('toast');el.textContent=t;el.classList.remove('show');void el.offsetWidth;el.classList.add('show')}
-const DUR={distribute:5.2,chug:4.8,scream:2.8,dance:6,letsgo:3.2,lockin:6,party:6};
+const PARTY_MAX=Math.max(2,+cfg.partySeconds||5);
+const DUR={distribute:5.2,chug:4.8,scream:2.8,dance:Math.min(6,PARTY_MAX),letsgo:3.2,lockin:Math.min(6,PARTY_MAX),party:Math.min(6,PARTY_MAX)};
 let uiKey='';
 function setCoinUI(){uiKey=[COIN.name,COIN.symbol,COIN.logo,COIN.twitterUrl].join('|');
  $('cname').textContent=COIN.name||(DEMO?'Demo Coin':'Loading…');$('csym').textContent=COIN.symbol||'';
@@ -766,8 +767,11 @@ function frame(now){
  const r=rate(),exc=Math.max(-1,Math.min(1,(r-5)/12)),sc=(rawRate()-5)/8,pm=mode;
  if(act){act.t+=dt;if(act.t>=act.dur){act=null;mode=0}}
  else if(queue.length&&mode!==1&&mode!==4)startAct(queue.shift());
- if(mode===3){}else if(mode===0){if(sc<-.75)mode=1;else if(sc>.9)mode=2}
+ if(mode===3){}else if(mode===0){if(sc<-.75)mode=1;else if(sc>.9&&partyArm)mode=2}
  else if(mode===1&&sc>-.35)mode=0;else if(mode===2&&sc<.45)mode=0;
+ // the celebration is a short burst: after PARTY_MAX seconds he sits back down and trades until the next momentum swing (sc dips, then spikes again)
+ if(sc<.45)partyArm=true;
+ if(mode===2){partyT+=dt;if(partyT>PARTY_MAX){mode=0;partyArm=false}}else partyT=0;
  if(mode===1){rageT+=dt;if(DESPAIR_ON&&despCool<=0&&rageT>DESPAIR_AFTER&&sc<-.5)startDespair()}else rageT=0;
  despCool-=dt;
  if(mode===4&&DS){if(!despairStep(dt,sc)){endDespair();mode=0;despCool=25;rageT=0}}else if(DS)endDespair();else if(mode===4)mode=0;

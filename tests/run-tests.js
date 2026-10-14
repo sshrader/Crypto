@@ -35,7 +35,7 @@ function boot({ cfg = {}, loc = { protocol: 'https:', hostname: 'example.com', s
   const o = new Function(...names, js + exp)(...names.map(n => g[n]));
   let now = 0;
   o.run = (n, each) => { for (let i = 0; i < n; i++) { now += 33; o.frame(now); if (each) each(i); } };
-  o.fetched = fetched; o.spoken = spoken; o.doc = doc;
+  o.fetched = fetched; o.spoken = spoken; o.doc = doc; o.setSc = v => { win.__sc = v; };
   return o;
 }
 
@@ -156,7 +156,7 @@ let passed = 0; const t = async (name, fn) => { try { await fn(); passed++; cons
   console.log('demo mode');
   await t('demo simulates price, runs every milestone + airdrop act and rage/party', async () => {
     const o = boot({ cfg: { demo: true }, patch: js => {
-      const a = "if(mode===3){}else if(mode===0){if(sc<-.75)mode=1;else if(sc>.9)mode=2}\n else if(mode===1&&sc>-.35)mode=0;else if(mode===2&&sc<.45)mode=0;";
+      const a = "if(mode===3){}else if(mode===0){if(sc<-.75)mode=1;else if(sc>.9&&partyArm)mode=2}\n else if(mode===1&&sc>-.35)mode=0;else if(mode===2&&sc<.45)mode=0;";
       assert(js.includes(a), 'transition patch target missing');
       return js.replace(a, "if(mode===3){}else if(mode===0&&Math.random()<.004)mode=1+(Math.random()<.5|0);else if(mode!==0&&Math.random()<.01)mode=0;").replace('drinkWait=8', 'drinkWait=1'); } });
     assert(o.DEMO && o.FAKE && o.hasData); const p0 = o.price; o.run(200); assert(o.price !== p0, 'demo price should move');
@@ -276,6 +276,15 @@ let passed = 0; const t = async (name, fn) => { try { await fn(); passed++; cons
   });
   await t('sound effects never throw (including with no audio support)', async () => {
     const o = boot({ cfg: { demo: true } }); o.setSound(true); ['punch', 'thud', 'crush', 'levelup', 'sad', 'ching', 'aura', 'nope'].forEach(n => o.sfx(n));
+  });
+
+  await t('celebration is a short burst (about 5s), then he trades until the next momentum swing', async () => {
+    const o = boot({ cfg: { demo: true }, patch: js => js.replace('sc=(rawRate()-5)/8,pm=mode;', 'sc=window.__sc,pm=mode;') });
+    o.setSc(1.5); o.run(30); assert.strictEqual(o.mode, 2, 'should start celebrating');
+    o.run(60); assert.strictEqual(o.mode, 2, 'still celebrating at ~3s');
+    o.run(100); assert.strictEqual(o.mode, 0, 'must stop celebrating after ~5s, mode ' + o.mode);
+    o.run(300); assert.strictEqual(o.mode, 0, 'must not restart while momentum stays high');
+    o.setSc(0); o.run(10); o.setSc(1.5); o.run(10); assert.strictEqual(o.mode, 2, 'a fresh swing starts a new celebration');
   });
 
   console.log('airdrop parser');
