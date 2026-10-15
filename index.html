@@ -572,10 +572,12 @@ $('share').onclick=shareShot;
 // first-visit screen: one tap unlocks browser audio (sound effects, voice, "nice" clip)
 function unlockAudio(){try{const a=ac();a&&a.resume&&a.resume()}catch(e){}try{if(window.speechSynthesis){const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u)}}catch(e){}}
 (function(){const en=$('enter');if(!en)return;
- if(cfg.enterScreen===false||!soundOn){en.remove();return}
+ // once per browser tab: after he has tapped in (or loaded a custom CA, which reloads the page) the screen stays away
+ let seen=false;try{seen=sessionStorage.getItem('ttEntered')==='1'}catch(e){}
+ if(cfg.enterScreen===false||!soundOn||seen){en.remove();return}
  const et=$('etitle');if(et)et.textContent=(cfg.signText||'Trench Trader').toUpperCase();
  const el=$('elogo');if(COIN.logo){el.src=COIN.logo;el.onerror=()=>{el.style.display='none'}}else el.style.display='none';
- $('egoBtn').onclick=()=>{unlockAudio();en.classList.add('gone');setTimeout(()=>en.remove(),600);sfx('aura')}})();
+ $('egoBtn').onclick=()=>{try{sessionStorage.setItem('ttEntered','1')}catch(e){}unlockAudio();en.classList.add('gone');setTimeout(()=>en.remove(),600);sfx('aura')}})();
 $('sim').onclick=()=>{const b58='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz',rw=()=>Array.from({length:44},()=>b58[Math.random()*58|0]).join('');
  const to=Array.from({length:1+(Math.random()*4|0)},()=>({w:rw(),a:1000+Math.random()*40000}));
  queue.push({act:'distribute',label:'🪂 DISTRIBUTING AIRDROP…',info:{sig:'',total:to.reduce((t,x)=>t+x.a,0),to}})};
