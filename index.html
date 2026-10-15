@@ -752,8 +752,11 @@ if(ROOM_UP){
   box(.01,.01,.17,M(0xc9a36a),[-1.52,.13,.55],g).rotation.x=.5;box(.01,.01,.17,M(0xc9a36a),[-1.56,.13,.55],g).rotation.x=.45;
   const pz=box(.34,.04,.34,M(0xb98a55),[-1.95,.02,.38],g);pz.rotation.y=.3},[0,.9,0]);
  prop(25000,0,'trophy shelf',g=>{box(1.1,.05,.26,M(0x3a2a20),[0,0,0],g);[-.4,.4].forEach(x=>box(.04,.12,.2,M(0x222222),[x,-.08,-.02],g));trophy(g,0,.025)},[2.6,2.3,-1.46]);
- prop(50000,0,'gold chain',g=>{const c=new THREE.Mesh(new THREE.TorusGeometry(1,.045,8,40),gold);c.rotation.x=Math.PI/2;c.scale.set(.345,.215,.22);c.position.set(0,.72,0);g.add(c);
-  sph(.035,gold,[0,.55,-.2],g)},null,up);
+ prop(50000,0,'gold chain',g=>{ // a necklace: a loop around the neck, with the chain draping down the front of the hoodie to a pendant
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(.105,.016,8,32),gold);ring.rotation.x=Math.PI/2;ring.position.set(0,.862,0);g.add(ring);
+  const drape=new THREE.CatmullRomCurve3([new V(-.095,.86,-.05),new V(-.12,.805,-.15),new V(-.125,.76,-.2),new V(-.07,.68,-.205),new V(0,.62,-.21),new V(.07,.68,-.205),new V(.125,.76,-.2),new V(.12,.805,-.15),new V(.095,.86,-.05)]);
+  g.add(new THREE.Mesh(new THREE.TubeGeometry(drape,28,.014,6,false),gold));
+  sph(.042,gold,[0,.595,-.215],g).scale.set(1,1,.55)},null,up);
  prop(100000,0,'car poster',g=>{g.rotation.y=Math.PI/2;
   const cv=document.createElement('canvas');cv.width=280;cv.height=200;const k=cv.getContext('2d'),gr=k.createLinearGradient(0,0,0,200);gr.addColorStop(0,'#1a0838');gr.addColorStop(.6,'#ff5fa2');gr.addColorStop(1,'#ffb347');k.fillStyle=gr;k.fillRect(0,0,280,200);
   k.fillStyle='#ffe27a';k.beginPath();k.arc(140,118,40,0,7);k.fill();k.fillStyle='#120826';k.fillRect(0,150,280,50);
