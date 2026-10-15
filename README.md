@@ -61,7 +61,7 @@ Name, ticker and X link are filled in automatically from the coin's DexScreener 
 **Logo:** the page uses your own file, not DexScreener's. Save your logo as `assets/logo.png` (square works best; it
 is shown in a circle and also becomes the browser-tab icon). For a different file name or type (jpg, webp, svg), change `logo:` in
 `config.js` to match, e.g. `'assets/mylogo.webp'`. Until the file exists the page shows a letter circle.
-Set `logoFromDexScreener: true` only if you ever want DexScreener's logo as a fallback.
+The top-left logo is the coin's real logo, found automatically (DexScreener's image first, then Jupiter's token list, which reads the token's on-chain metadata). If neither has one, `logo` (your file) is shown. Set `logoSource: 'file'` to always use your file.
 
 ## 3. What is real and what is decoration
 
@@ -126,7 +126,7 @@ and a Solscan link. Wallets already in history when the page loads are ignored.
 
 ## 6. Settings reference (all in `config.js`, each commented there)
 
-`ca` · `name` `symbol` `twitter` `twitterUrl` `logo` `logoFromDexScreener` · `pollSeconds` `candleSeconds` `sensitivity` ·
+`ca` · `name` `symbol` `twitter` `twitterUrl` `logo` `logoSource` · `pollSeconds` `candleSeconds` `sensitivity` ·
 `devWallet` `rpc` `devPollSeconds` `ignoreWallets` · `allowUrlOverrides` `demo` `fakeFeeds` · `signText` · `disclaimer` · `roomUpgrades` `aura` `voice` `voiceName` `sfx` · `despair` `despairAfterSeconds` `despairMaxSeconds` · `niceSound` · `milestones`
 
 **Room upgrades:** the bedroom fills up as the real market cap climbs: trophy shelf (25K), gold chain (50K), car poster, sunglasses and a second

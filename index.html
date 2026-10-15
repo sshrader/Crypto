@@ -355,6 +355,15 @@ function fmtMC(v){if(!hasData())return'—';if(!mcOK)return'$'+fmt(price);return
 function toast(t){const el=$('toast');el.textContent=t;el.classList.remove('show');void el.offsetWidth;el.classList.add('show')}
 const PARTY_MAX=Math.max(2,+cfg.partySeconds||5);
 const DUR={distribute:5.2,chug:4.8,scream:2.8,dance:Math.min(6,PARTY_MAX),letsgo:3.2,lockin:Math.min(6,PARTY_MAX),party:Math.min(6,PARTY_MAX)};
+// ---- coin logo: the coin's real picture, tried in order: DexScreener's listing image, then Jupiter's token list (reads the
+// token's on-chain metadata, so it works even when the DexScreener profile isn't paid for), then the logo file from config.js
+const LOGO_COIN=cfg.logoSource!=='file',FALLBACK_LOGO=cfg.logo||'',badLogo=new Set();let logoRank=0,jupTries=0,jupAt=0,shareImg=null,shareOK=false;
+const httpsUrl=u=>{u=String(u||'');if(/^ipfs:\/\//.test(u))u='https://ipfs.io/ipfs/'+u.slice(7).replace(/^ipfs\//,'');return/^https:\/\//.test(u)?u:''};
+function useCoinLogo(u,rank){u=httpsUrl(u);if(!LOGO_COIN||!u||rank<=logoRank||badLogo.has(u))return;logoRank=rank;COIN.logo=u}
+async function jupLogo(){if(!LOGO_COIN||logoRank>=1||jupTries>=3||Date.now()-jupAt<30000)return;jupTries++;jupAt=Date.now();
+ try{const r=await fetch('https://lite-api.jup.ag/tokens/v2/search?query='+encodeURIComponent(CA));if(!r.ok)return;const j=await r.json(),t=(Array.isArray(j)?j:[j]).find(x=>x&&x.id===CA);
+  if(t){useCoinLogo(t.icon,1);if(logoRank===1)setCoinUI()}}catch(e){}}
+{const f=document.getElementById('fav');if(f&&FALLBACK_LOGO)f.href=FALLBACK_LOGO}
 let uiKey='';
 function setCoinUI(){uiKey=[COIN.name,COIN.symbol,COIN.logo,COIN.twitterUrl].join('|');
  $('cname').textContent=COIN.name||(DEMO?'Demo Coin':'Loading…');$('csym').textContent=COIN.symbol||'';
@@ -363,7 +372,9 @@ function setCoinUI(){uiKey=[COIN.name,COIN.symbol,COIN.logo,COIN.twitterUrl].joi
  if(/^https:\/\//.test(COIN.twitterUrl||''))tw.href=COIN.twitterUrl;else tw.removeAttribute('href');
  document.title=(COIN.name?COIN.name+' · ':'')+'Trench Trader';buildLinks();
  const lg=$('logo'),ini=(COIN.symbol||COIN.name||'?').replace('$','')[0]||'?';lg.textContent='';
- if(COIN.logo){const im=document.createElement('img');im.src=COIN.logo;im.alt='';im.onload=()=>{const f=document.getElementById('fav');if(f)f.href=COIN.logo};im.onerror=()=>{console.warn('logo file not found: '+COIN.logo);im.remove();lg.textContent=ini};lg.appendChild(im)}else lg.textContent=ini;
+ shareOK=false;shareImg=null;
+ if(COIN.logo){const im=document.createElement('img');im.src=COIN.logo;im.alt='';im.referrerPolicy='no-referrer';im.onerror=()=>{im.remove();badLogo.add(COIN.logo);if(FALLBACK_LOGO&&COIN.logo!==FALLBACK_LOGO){console.warn('logo failed, using '+FALLBACK_LOGO);COIN.logo=FALLBACK_LOGO;logoRank=0;setCoinUI()}else lg.textContent=ini};lg.appendChild(im);
+  const si=document.createElement('img');si.crossOrigin='anonymous';si.onload=()=>{shareOK=true};si.src=COIN.logo;shareImg=si}else lg.textContent=ini;
  drawScreen3()}
 async function copyCA(){if(!COIN.ca)return;let ok=false;try{await navigator.clipboard.writeText(COIN.ca);ok=true}catch(e){try{const rg=document.createRange();rg.selectNodeContents($('ca'));const se=getSelection();se.removeAllRanges();se.addRange(rg);ok=document.execCommand('copy')}catch(e2){}}toast(ok?'📋 CA copied!':'Press Ctrl/Cmd + C to copy')}
 $('ca').ondblclick=copyCA;
@@ -531,7 +542,7 @@ function shareShot(){try{
  R.render(S,cam);const w=cv.width,h=cv.height,k=Math.min(1,1280/w),W=Math.round(w*k),H=Math.round(h*k),u=Math.min(Math.max(.4,H*.14/90),W/700),bar=Math.round(90*u);
  const c=document.createElement('canvas');c.width=W;c.height=H+bar;const g=c.getContext('2d');g.drawImage(cv,0,0,W,H);
  g.fillStyle='#0b0b14';g.fillRect(0,H,W,bar);g.fillStyle='#ff4fd8';g.fillRect(0,H,W,3);
- const chg=chgPct(),li=document.querySelector('#logo img'),mcT=fmtMC(mc());let x=16*u;
+ const chg=chgPct(),li=shareOK?shareImg:null,mcT=fmtMC(mc());let x=16*u;
  if(li&&li.complete&&li.naturalWidth){g.save();g.beginPath();g.arc(x+30*u,H+bar/2,30*u,0,7);g.clip();g.drawImage(li,x,H+bar/2-30*u,60*u,60*u);g.restore();x+=74*u}
  g.textBaseline='middle';g.fillStyle='#e8e8f5';g.font='800 '+(22*u)+'px system-ui,sans-serif';g.fillText((COIN.symbol||COIN.name||'').slice(0,18),x,H+bar*.32);
  g.font='800 '+(30*u)+'px system-ui,sans-serif';g.fillText(mcT,x,H+bar*.68);const mw=g.measureText(mcT).width;
@@ -575,11 +586,12 @@ async function poll(){
   if(!COIN.name&&p.baseToken.name)COIN.name=String(p.baseToken.name).slice(0,40);
   if(!COIN.symbol&&p.baseToken.symbol)COIN.symbol='$'+String(p.baseToken.symbol).slice(0,12);sym=COIN.symbol||'$COIN';
   const inf=p.info||{};
-  if(cfg.logoFromDexScreener===true&&!COIN.logo&&/^https:\/\//.test(inf.imageUrl||''))COIN.logo=inf.imageUrl;
+  useCoinLogo(inf.imageUrl,2);
   const tws=(inf.socials||[]).find(x=>x&&x.type==='twitter'&&/^https:\/\//.test(x.url||''));
   if(tws&&!COIN.twitterUrl){COIN.twitterUrl=tws.url;if(!COIN.twitter)COIN.twitter='@'+tws.url.split('?')[0].split('/').filter(Boolean).pop()}
   stats={t:Date.now(),dex:p.dexId,pc:p.priceChange||{},vol:p.volume||{},tx:p.txns||{},liq:(p.liquidity||{}).usd};
   if([COIN.name,COIN.symbol,COIN.logo,COIN.twitterUrl].join('|')!==uiKey)setCoinUI();
+  jupLogo();
   if(DEMO){drawScreen2();drawScreen3();return}
   const mcv=p.marketCap||p.fdv;mcOK=mcv>0;mcScale=mcOK?mcv/px:1;
   m5=+(p.priceChange||{}).m5||0;target=px;logPx(px);
