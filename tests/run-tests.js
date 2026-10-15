@@ -147,9 +147,26 @@ let passed = 0; const t = async (name, fn) => { try { await fn(); passed++; cons
 
   console.log('URL override rules');
   const OTHER = 'EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm';
-  await t('public site ignores ?ca= and ?demo=1', () => {
-    const o = boot({ loc: { protocol: 'https:', hostname: 'mysite.com', search: `?ca=${OTHER}&demo=1&fake=1` } });
-    assert.strictEqual(o.CA, MINT); assert(!o.DEMO && !o.FAKE);
+  await t('public site: ?ca= loads that coin (allowCustomCA), ?demo=1 and ?fake=1 are ignored, bad/locked values fall back to the default', () => {
+    const pub = (search, cfg) => boot({ cfg, loc: { protocol: 'https:', hostname: 'mysite.com', search } });
+    const o = pub(`?ca=${OTHER}&demo=1&fake=1`); assert.strictEqual(o.CA, OTHER, 'custom CA should load'); assert(!o.DEMO && !o.FAKE);
+    assert.strictEqual(pub('').CA, MINT, 'no ?ca= must use the configured CA');
+    assert.strictEqual(pub('?ca=not-an-address').CA, MINT, 'invalid ?ca= must be ignored');
+    assert.strictEqual(pub(`?ca=${OTHER}`, { allowCustomCA: false }).CA, MINT, 'allowCustomCA:false locks to the configured coin');
+    assert.strictEqual(pub(`?ca=${MINT}`).CA, MINT);
+  });
+  await t('custom CA takes name, ticker and X link from DexScreener, not from config.js', async () => {
+    const brand = { name: 'Mine', symbol: '$MINE', twitter: '@mine', twitterUrl: 'https://x.com/mine' };
+    const pub = search => boot({ cfg: brand, loc: { protocol: 'https:', hostname: 'mysite.com', search }, fetchImpl: () => live1() });
+    const d = pub(''); await d.poll(); assert.strictEqual(d.COIN.name, 'Mine'); assert.strictEqual(d.COIN.symbol, '$MINE'); assert.strictEqual(d.COIN.twitter, '@mine');
+    const c = boot({ cfg: brand, loc: { protocol: 'https:', hostname: 'mysite.com', search: '?ca=' + OTHER }, fetchImpl: () => res({ pairs: [pair({ baseToken: { address: OTHER, name: 'Test Coin', symbol: 'TST' } })] }) }); assert.strictEqual(c.COIN.name, ''); assert.strictEqual(c.COIN.twitterUrl, '');
+    await c.poll(); assert.strictEqual(c.COIN.name, 'Test Coin'); assert.strictEqual(c.COIN.symbol, '$TST'); assert.strictEqual(c.COIN.twitter, '@testcoin');
+  });
+  await t('custom coin does not use the default coin\'s dev wallet', async () => {
+    const o = boot({ cfg: { devWallet: DEV }, loc: { protocol: 'https:', hostname: 'mysite.com', search: `?ca=${OTHER}` }, fetchImpl: () => live1() });
+    const ctl = boot({ cfg: { devWallet: DEV }, fetchImpl: () => live1() }); await new Promise(r => setImmediate(r));
+    assert(ctl.fetched.some(u => /mainnet-beta/.test(u)), 'control: dev wallet watcher should run for the default coin');
+    await new Promise(r => setImmediate(r)); assert(!o.fetched.some(u => /mainnet-beta/.test(u)), 'dev wallet watcher must be off for a custom coin');
   });
   await t('localhost and file:// honor overrides', () => {
     assert.strictEqual(boot({ loc: { protocol: 'http:', hostname: 'localhost', search: `?ca=${OTHER}` } }).CA, OTHER);

@@ -39,6 +39,9 @@ button{pointer-events:auto;border:0;border-radius:10px;padding:12px 18px;font-si
 .links{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .pill{display:inline-block;background:rgba(255,255,255,.1);color:var(--fg);padding:6px 11px;border-radius:999px;font-size:12px;font-weight:700;text-decoration:none;border:0;line-height:1.2;touch-action:manipulation}
 .pill.buy{background:var(--up);color:#06060c}
+#cust{gap:6px;margin-top:8px;align-items:center}
+#custIn{flex:1;min-width:0;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:10px;color:var(--fg);padding:8px 10px;font:13px ui-monospace,monospace;outline:none}
+#custIn:focus{border-color:#7df9ff}
 #enter{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 40%,rgba(40,20,80,.9),rgba(5,5,12,.97));backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);transition:opacity .5s;text-align:center;padding:24px}
 #enter.gone{opacity:0;pointer-events:none}
 #elogo{width:132px;height:132px;border-radius:50%;box-shadow:0 0 40px #ff2bd6aa,0 0 80px #7df9ff55;margin-bottom:18px}
@@ -66,7 +69,7 @@ button{pointer-events:auto;border:0;border-radius:10px;padding:12px 18px;font-si
  <div class="card" id="coin">
   <div class="crow"><div id="logo">?</div><div><div id="cname">Loading…</div><div class="small"><span id="csym"></span><span id="ctsep"> · </span><a id="ctw" target="_blank" rel="noopener"></a></div></div></div>
   <div class="small clab" style="margin-top:8px">Contract</div>
-  <div id="ca" title="Double-click to copy"></div><div class="links" id="links"></div>
+  <div id="ca" title="Double-click to copy"></div><div class="links" id="links"></div><div id="cust" style="display:none"><input id="custIn" placeholder="Paste any Solana contract address" autocomplete="off" autocapitalize="off" spellcheck="false"><button class="pill buy" id="custGo">Load</button></div><div class="small" id="custNote" style="display:none;margin-top:6px">Custom coin · <a style="color:#8bb4ff">back to default</a></div>
   <div class="small" style="margin-top:8px"><span id="mclabel">MARKET CAP</span> <span id="src"></span></div><div class="price" id="price">$0</div><div id="chg">0%</div>
  </div>
  <div class="col"><div class="card"><div class="small">Trader mood</div><div class="price" id="mood" style="font-size:16px">…</div></div>
@@ -332,11 +335,14 @@ const cfg=window.TRADER_CONFIG,qs=new URLSearchParams(location.search);
 const LOCAL=location.protocol==='file:'||/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
 const OVR=LOCAL||cfg.allowUrlOverrides===true;               // ?ca= ?dev= ?demo=1 ?fake=1 only work locally unless enabled
 const qparam=k=>OVR?qs.get(k):null,B58=/^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
-const CA_IN=String(qparam('ca')||cfg.ca||'').trim(),DEV_WALLET=String(qparam('dev')||cfg.devWallet||'').trim();
+// A visitor can load any coin with ?ca=<address> (the "Other coin" box does this). With no ?ca= the page uses your CA_KEY / config.js address.
+const CUSTOM_OK=cfg.allowCustomCA!==false,CA_Q=String(CUSTOM_OK?qs.get('ca'):qparam('ca')||'').trim(),CA_CUSTOM=B58.test(CA_Q)&&CA_Q!==String(cfg.ca||'').trim();
+const CA_IN=String((CA_CUSTOM?CA_Q:qparam('ca'))||cfg.ca||'').trim(),DEV_WALLET=String(qparam('dev')||(CA_CUSTOM?'':cfg.devWallet)||'').trim();
 const CA_OK=B58.test(CA_IN),DEV_OK=B58.test(DEV_WALLET);
 const DEMO=cfg.demo===true||qparam('demo')==='1';             // simulated price + test buttons
 const FAKE=DEMO||cfg.fakeFeeds===true||qparam('fake')==='1';  // decorative simulated trades / whale alerts / tweets
-const COIN={name:cfg.name||'',symbol:cfg.symbol||'',ca:CA_IN,twitter:cfg.twitter||'',twitterUrl:cfg.twitterUrl||'',logo:cfg.logo||''};
+// branding in config.js (name, ticker, X link) belongs to YOUR coin; a custom CA gets its own from DexScreener instead
+const MINE=!CA_CUSTOM,COIN={name:MINE&&cfg.name||'',symbol:MINE&&cfg.symbol||'',ca:CA_IN,twitter:MINE&&cfg.twitter||'',twitterUrl:MINE&&cfg.twitterUrl||'',logo:cfg.logo||''};
 const RPC=cfg.rpc||'https://api.mainnet-beta.solana.com',IGNORE_WALLETS=cfg.ignoreWallets||[];
 const POLL_MS=Math.max(2,cfg.pollSeconds||4)*1000,DEV_MS=Math.max(5,cfg.devPollSeconds||10)*1000;
 const SENS=cfg.sensitivity||1,CANDLE_TICKS=Math.max(2,Math.round((cfg.candleSeconds||10)/.2));
@@ -383,7 +389,13 @@ function buildLinks(){const el=$('links');if(!el)return;el.textContent='';
  const add=(t,href,cls,fn)=>{const a=document.createElement(href?'a':'button');a.className='pill'+(cls?' '+cls:'');a.textContent=t;if(href){a.href=href;a.target='_blank';a.rel='noopener noreferrer'}else a.onclick=fn;el.appendChild(a)};
  if(CA_OK){add('🟢 Buy',BUY_T.replace('{CA}',encodeURIComponent(COIN.ca)),'buy');add('📈 Chart','https://dexscreener.com/solana/'+encodeURIComponent(COIN.ca))}
  if(/^https:\/\//.test(COIN.twitterUrl||''))add('𝕏 Follow',COIN.twitterUrl);
- if(COIN.ca)add('📋 Copy CA',null,'',copyCA)}
+ if(COIN.ca)add('📋 Copy CA',null,'',copyCA);
+ if(CUSTOM_OK)add('🔎 Custom CA',null,'',()=>{const p=$('cust');p.style.display=p.style.display==='none'?'flex':'none';if(p.style.display==='flex')$('custIn').focus()})}
+function loadCustom(){const m=String($('custIn').value||'').match(/[1-9A-HJ-NP-Za-km-z]{32,44}/);
+ if(!m){toast('Paste a Solana contract address');return}
+ location.href=location.pathname+'?ca='+encodeURIComponent(m[0])}
+$('custGo').onclick=loadCustom;$('custIn').onkeydown=e=>{if(e.key==='Enter')loadCustom()};
+{const n=$('custNote');if(n){if(CA_CUSTOM){n.style.display='';n.querySelector('a').href=location.pathname}else n.remove()}}
 const sh6=w=>w.slice(0,4)+'…'+w.slice(-4),fa=v=>v>=1e6?(v/1e6).toFixed(2)+'M':v>=1e3?(v/1e3).toFixed(1)+'K':Math.round(v).toString();
 function showAirdrop(ad){const n=ad.to.length,f=ad.to[0],who=sh6(f.w)+(n>1?' +'+(n-1)+' more':'');
  $('airT').textContent='🪂 AIRDROP · '+fa(ad.total)+' '+COIN.symbol+' → '+who;$('airT').title=f.w;
@@ -550,7 +562,7 @@ function shareShot(){try{
  g.textAlign='right';g.fillStyle='#7df9ff';g.font='900 '+(26*u)+'px system-ui,sans-serif';g.fillText((cfg.signText||'Trench Trader').toUpperCase(),W-16*u,H+bar*.38);
  g.fillStyle='rgba(232,232,245,.6)';g.font='600 '+(15*u)+'px system-ui,sans-serif';g.fillText(location.protocol==='file:'?'live 3D meme-coin trader':location.host,W-16*u,H+bar*.7);
  const url=c.toDataURL('image/png'),bin=atob(url.split(',')[1]),u8=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);
- const file=new File([u8],'trench-trader.png',{type:'image/png'}),page=location.protocol==='file:'?'':location.origin+location.pathname;
+ const file=new File([u8],'trench-trader.png',{type:'image/png'}),page=location.protocol==='file:'?'':location.origin+location.pathname+(CA_CUSTOM?'?ca='+encodeURIComponent(CA):'');
  const txt=(COIN.symbol||COIN.name||'This coin')+' at '+mcT+(hasData()?' ('+(chg>=0?'+':'')+chg.toFixed(1)+'% 1m)':'')+' - watching the Trench Trader react live 👀';
  if(navigator.canShare&&navigator.canShare({files:[file]})){navigator.share({files:[file],text:txt,url:page||undefined}).catch(()=>{});return}
  const a=document.createElement('a');a.href=url;a.download='trench-trader.png';document.body.appendChild(a);a.click();a.remove();
