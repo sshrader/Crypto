@@ -19,14 +19,17 @@ window.TRADER_CONFIG = {
   twitter: '',         // e.g. '@bonkchad'
   twitterUrl: '',      // e.g. 'https://x.com/bonkchad'  (must start with https://)
 
-  /* LOGO: your own file. Save it as assets/logo.png (square works best -
-     it is shown in a circle and also used as the browser-tab icon).
-     To use a different file name or type, change the path here, e.g.
-     'assets/mylogo.webp'. If the file is missing, the page shows a
-     letter circle instead. DexScreener's logo is NOT used unless you
-     set logoFromDexScreener: true.                                      */
+  /* LOGO (top-left card): by default it shows the coin's REAL logo, found
+     automatically - first DexScreener's image, then Jupiter's token list
+     (which reads the token's own metadata, so it works even if the coin's
+     DexScreener profile isn't paid for). If neither has one, or the
+     picture won't load, it shows your own file below.
+     logo        your fallback file (also the browser-tab icon), e.g. the
+                 TT logo at assets/logo.png. Square works best.
+     logoSource  'coin' = the coin's real logo (default)
+                 'file' = always use your file above, never look it up.  */
   logo: 'assets/logo.png',
-  logoFromDexScreener: false,
+  logoSource: 'coin',
 
   /* ---------- 2. LIVE DATA --------------------------------------------
      Prices and market cap come from the DexScreener public API.

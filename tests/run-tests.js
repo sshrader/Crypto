@@ -82,17 +82,23 @@ let passed = 0; const t = async (name, fn) => { try { await fn(); passed++; cons
     assert.strictEqual(o.target, 0.000012); assert.strictEqual(o.price, 0.000012);
     assert.strictEqual(Math.round(o.mc()), 12000); assert.strictEqual(o.fmtMC(o.mc()), '$12.0K');
     assert.strictEqual(o.COIN.name, 'Test Coin'); assert.strictEqual(o.COIN.symbol, '$TST'); assert.strictEqual(o.COIN.twitter, '@testcoin');
-    assert.strictEqual(o.COIN.logo, 'assets/logo.png', 'DexScreener logo must NOT override the configured logo');
+    assert(o.COIN.logo.startsWith('https://cdn.example/'), 'coin logo from DexScreener expected');
     assert.deepStrictEqual(o.MILES.map(m => m.done), o.MILES.map(m => m.mc <= 12000), 'already-passed milestones must not replay');
     assert.strictEqual(o.queue.length, 0); o.run(300);
   });
-  await t('logo: config file wins; DexScreener logo only if opted in', async () => {
-    const a = boot({ cfg: { logo: '' }, fetchImpl: () => live1() }); await a.poll();
-    assert.strictEqual(a.COIN.logo, '', 'DexScreener logo used without opt-in');
-    const b = boot({ cfg: { logo: '', logoFromDexScreener: true }, fetchImpl: () => live1() }); await b.poll();
-    assert(b.COIN.logo.startsWith('https://cdn.example/'), 'opt-in should use DexScreener logo');
-    const c = boot({ cfg: { logo: 'assets/mine.webp', logoFromDexScreener: true }, fetchImpl: () => live1() }); await c.poll();
-    assert.strictEqual(c.COIN.logo, 'assets/mine.webp', 'configured logo must beat DexScreener even when opted in');
+  await t('logo: coin logo from DexScreener, else Jupiter, else the configured file; logoSource file pins it', async () => {
+    const a = boot({ fetchImpl: () => live1() }); await a.poll();
+    assert(a.COIN.logo.startsWith('https://cdn.example/'), 'DexScreener image should be used: ' + a.COIN.logo);
+    assert(!a.fetched.some(u => /jup\.ag/.test(u)), 'Jupiter must not be called when DexScreener has the image');
+    const noImg = () => res({ pairs: [pair({ info: undefined })] });
+    const b = boot({ fetchImpl: u => /jup\.ag/.test(u) ? res([{ id: MINT, icon: 'ipfs://bafyJUPICON' }]) : noImg() }); await b.poll(); await new Promise(r => setImmediate(r));
+    assert.strictEqual(b.COIN.logo, 'https://ipfs.io/ipfs/bafyJUPICON', 'Jupiter icon (ipfs converted) should be used');
+    const c = boot({ fetchImpl: () => noImg() }); await c.poll(); await new Promise(r => setImmediate(r));
+    assert.strictEqual(c.COIN.logo, 'assets/logo.png', 'falls back to the configured file when nothing is found');
+    const d = boot({ cfg: { logoSource: 'file' }, fetchImpl: () => live1() }); await d.poll();
+    assert.strictEqual(d.COIN.logo, 'assets/logo.png'); assert(!d.fetched.some(u => /jup\.ag/.test(u)), "logoSource 'file' must not look anything up");
+    const e = boot({ fetchImpl: u => /jup\.ag/.test(u) ? res([{ id: MINT, icon: 'http://insecure.example/x.png' }]) : noImg() }); await e.poll(); await new Promise(r => setImmediate(r));
+    assert.strictEqual(e.COIN.logo, 'assets/logo.png', 'non-https icons must be ignored');
   });
   await t('no random price movement without data or demo; real moves drive milestones', async () => {
     const seen = new Set(); const o = boot({ fetchImpl: () => live1() });
