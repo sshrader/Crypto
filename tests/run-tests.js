@@ -155,6 +155,13 @@ let passed = 0; const t = async (name, fn) => { try { await fn(); passed++; cons
     assert.strictEqual(pub(`?ca=${OTHER}`, { allowCustomCA: false }).CA, MINT, 'allowCustomCA:false locks to the configured coin');
     assert.strictEqual(pub(`?ca=${MINT}`).CA, MINT);
   });
+  await t('custom CA takes name, ticker and X link from DexScreener, not from config.js', async () => {
+    const brand = { name: 'Mine', symbol: '$MINE', twitter: '@mine', twitterUrl: 'https://x.com/mine' };
+    const pub = search => boot({ cfg: brand, loc: { protocol: 'https:', hostname: 'mysite.com', search }, fetchImpl: () => live1() });
+    const d = pub(''); await d.poll(); assert.strictEqual(d.COIN.name, 'Mine'); assert.strictEqual(d.COIN.symbol, '$MINE'); assert.strictEqual(d.COIN.twitter, '@mine');
+    const c = boot({ cfg: brand, loc: { protocol: 'https:', hostname: 'mysite.com', search: '?ca=' + OTHER }, fetchImpl: () => res({ pairs: [pair({ baseToken: { address: OTHER, name: 'Test Coin', symbol: 'TST' } })] }) }); assert.strictEqual(c.COIN.name, ''); assert.strictEqual(c.COIN.twitterUrl, '');
+    await c.poll(); assert.strictEqual(c.COIN.name, 'Test Coin'); assert.strictEqual(c.COIN.symbol, '$TST'); assert.strictEqual(c.COIN.twitter, '@testcoin');
+  });
   await t('custom coin does not use the default coin\'s dev wallet', async () => {
     const o = boot({ cfg: { devWallet: DEV }, loc: { protocol: 'https:', hostname: 'mysite.com', search: `?ca=${OTHER}` }, fetchImpl: () => live1() });
     const ctl = boot({ cfg: { devWallet: DEV }, fetchImpl: () => live1() }); await new Promise(r => setImmediate(r));

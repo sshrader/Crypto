@@ -341,7 +341,8 @@ const CA_IN=String((CA_CUSTOM?CA_Q:qparam('ca'))||cfg.ca||'').trim(),DEV_WALLET=
 const CA_OK=B58.test(CA_IN),DEV_OK=B58.test(DEV_WALLET);
 const DEMO=cfg.demo===true||qparam('demo')==='1';             // simulated price + test buttons
 const FAKE=DEMO||cfg.fakeFeeds===true||qparam('fake')==='1';  // decorative simulated trades / whale alerts / tweets
-const COIN={name:cfg.name||'',symbol:cfg.symbol||'',ca:CA_IN,twitter:cfg.twitter||'',twitterUrl:cfg.twitterUrl||'',logo:cfg.logo||''};
+// branding in config.js (name, ticker, X link) belongs to YOUR coin; a custom CA gets its own from DexScreener instead
+const MINE=!CA_CUSTOM,COIN={name:MINE&&cfg.name||'',symbol:MINE&&cfg.symbol||'',ca:CA_IN,twitter:MINE&&cfg.twitter||'',twitterUrl:MINE&&cfg.twitterUrl||'',logo:cfg.logo||''};
 const RPC=cfg.rpc||'https://api.mainnet-beta.solana.com',IGNORE_WALLETS=cfg.ignoreWallets||[];
 const POLL_MS=Math.max(2,cfg.pollSeconds||4)*1000,DEV_MS=Math.max(5,cfg.devPollSeconds||10)*1000;
 const SENS=cfg.sensitivity||1,CANDLE_TICKS=Math.max(2,Math.round((cfg.candleSeconds||10)/.2));
@@ -389,7 +390,7 @@ function buildLinks(){const el=$('links');if(!el)return;el.textContent='';
  if(CA_OK){add('🟢 Buy',BUY_T.replace('{CA}',encodeURIComponent(COIN.ca)),'buy');add('📈 Chart','https://dexscreener.com/solana/'+encodeURIComponent(COIN.ca))}
  if(/^https:\/\//.test(COIN.twitterUrl||''))add('𝕏 Follow',COIN.twitterUrl);
  if(COIN.ca)add('📋 Copy CA',null,'',copyCA);
- if(CUSTOM_OK)add('🔎 Other coin',null,'',()=>{const p=$('cust');p.style.display=p.style.display==='none'?'flex':'none';if(p.style.display==='flex')$('custIn').focus()})}
+ if(CUSTOM_OK)add('🔎 Custom CA',null,'',()=>{const p=$('cust');p.style.display=p.style.display==='none'?'flex':'none';if(p.style.display==='flex')$('custIn').focus()})}
 function loadCustom(){const m=String($('custIn').value||'').match(/[1-9A-HJ-NP-Za-km-z]{32,44}/);
  if(!m){toast('Paste a Solana contract address');return}
  location.href=location.pathname+'?ca='+encodeURIComponent(m[0])}
